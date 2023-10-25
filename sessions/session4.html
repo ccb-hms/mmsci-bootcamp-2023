@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.433">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Session 4: Transcriptomic Analysis</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="session4_files/libs/clipboard/clipboard.min.js"></script>
+<script src="session4_files/libs/quarto-html/quarto.js"></script>
+<script src="session4_files/libs/quarto-html/popper.min.js"></script>
+<script src="session4_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="session4_files/libs/quarto-html/anchor.min.js"></script>
+<link href="session4_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="session4_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="session4_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="session4_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="session4_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Session 4: Transcriptomic Analysis</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="limma" class="level1">
+<h1>Limma</h1>
+<section id="getting-geo-data" class="level2">
+<h2 class="anchored" data-anchor-id="getting-geo-data">Getting GEO data</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#   Differential expression analysis with limma</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(GEOquery)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: Biobase</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: BiocGenerics</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'BiocGenerics'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:stats':
+
+    IQR, mad, sd, var, xtabs</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:base':
+
+    anyDuplicated, aperm, append, as.data.frame, basename, cbind,
+    colnames, dirname, do.call, duplicated, eval, evalq, Filter, Find,
+    get, grep, grepl, intersect, is.unsorted, lapply, Map, mapply,
+    match, mget, order, paste, pmax, pmax.int, pmin, pmin.int,
+    Position, rank, rbind, Reduce, rownames, sapply, setdiff, sort,
+    table, tapply, union, unique, unsplit, which.max, which.min</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Setting options('download.file.method.GEOquery'='auto')</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Setting options('GEOquery.inmemory.gpl'=FALSE)</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(limma)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'limma'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following object is masked from 'package:BiocGenerics':
+
+    plotMA</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(umap)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>my_id <span class="ot">&lt;-</span> <span class="st">"GSE33126"</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>gse <span class="ot">&lt;-</span> <span class="fu">getGEO</span>(my_id)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Found 1 file(s)</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>GSE33126_series_matrix.txt.gz</code></pre>
+</div>
+</div>
+<p>Some datasets on GEO may be derived from different microarray platforms. Therefore the object gse is a list of different datasets. You can find out how many were used by checking the length of the gse object. Usually there will only be one platform and the dataset we want to analyse will be the first object in the list (gse[[1]]).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="do">## check how many platforms used</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(gse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="do">## if more than one dataset is present, you can analyse the other dataset by changing the number inside the [[...]]</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="do">## e.g. gse &lt;- gse[[2]]</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>gse <span class="ot">&lt;-</span> gse[[<span class="dv">1</span>]]</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>gse</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>ExpressionSet (storageMode: lockedEnvironment)
+assayData: 48803 features, 18 samples 
+  element names: exprs 
+protocolData: none
+phenoData
+  sampleNames: GSM820516 GSM820517 ... GSM820533 (18 total)
+  varLabels: title geo_accession ... tissue:ch1 (34 total)
+  varMetadata: labelDescription
+featureData
+  featureNames: ILMN_1343291 ILMN_1343295 ... ILMN_2416019 (48803
+    total)
+  fvarLabels: ID nuID ... GB_ACC (30 total)
+  fvarMetadata: Column Description labelDescription
+experimentData: use 'experimentData(object)'
+  pubMedIds: 23028787 
+Annotation: GPL6947 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pData</span>(gse) <span class="do">## print the sample information</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fData</span>(gse) <span class="do">## print the gene annotation</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="fu">exprs</span>(gse) <span class="do">## print the expression data</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="check-scales-and-normalization" class="level2">
+<h2 class="anchored" data-anchor-id="check-scales-and-normalization">Check scales and normalization</h2>
+<p>For visualisation and statistical analysis, we will inspect the data to discover what scale the data are presented in. The methods we will use assume the data are on a log<sub>2</sub> scale; typically in the range of 0 to 16.</p>
+<p>The <code>exprs</code> function can retrieve the expression values as a data frame; with one column per-sample and one row per-gene.</p>
+<p>The <code>summary</code> function can then be used to print the distributions.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="do">## exprs get the expression levels as a data frame and get the distribution</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">exprs</span>(gse))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   GSM820516         GSM820517         GSM820518         GSM820519      
+ Min.   :  137.4   Min.   :  132.6   Min.   :  132.6   Min.   :  132.6  
+ 1st Qu.:  212.1   1st Qu.:  212.1   1st Qu.:  212.0   1st Qu.:  212.1  
+ Median :  244.9   Median :  245.0   Median :  244.9   Median :  244.9  
+ Mean   : 1247.1   Mean   : 1247.1   Mean   : 1247.0   Mean   : 1247.1  
+ 3rd Qu.:  508.2   3rd Qu.:  508.2   3rd Qu.:  508.0   3rd Qu.:  508.2  
+ Max.   :71775.3   Max.   :71775.3   Max.   :71775.3   Max.   :71775.3  
+   GSM820520         GSM820521         GSM820522         GSM820523      
+ Min.   :  132.6   Min.   :  137.4   Min.   :  132.6   Min.   :  132.6  
+ 1st Qu.:  212.0   1st Qu.:  212.1   1st Qu.:  212.1   1st Qu.:  212.1  
+ Median :  244.9   Median :  244.9   Median :  244.9   Median :  244.9  
+ Mean   : 1247.1   Mean   : 1247.1   Mean   : 1247.1   Mean   : 1247.1  
+ 3rd Qu.:  508.2   3rd Qu.:  508.2   3rd Qu.:  508.2   3rd Qu.:  508.2  
+ Max.   :71775.3   Max.   :71775.3   Max.   :71775.3   Max.   :71775.3  
+   GSM820524         GSM820525         GSM820526         GSM820527      
+ Min.   :  132.6   Min.   :  132.6   Min.   :  132.6   Min.   :  132.6  
+ 1st Qu.:  212.1   1st Qu.:  212.1   1st Qu.:  212.0   1st Qu.:  212.1  
+ Median :  245.0   Median :  245.0   Median :  244.9   Median :  245.0  
+ Mean   : 1247.2   Mean   : 1247.2   Mean   : 1247.1   Mean   : 1247.2  
+ 3rd Qu.:  508.2   3rd Qu.:  508.3   3rd Qu.:  508.3   3rd Qu.:  508.2  
+ Max.   :71775.3   Max.   :71775.3   Max.   :71775.3   Max.   :71775.3  
+   GSM820528         GSM820529         GSM820530         GSM820531      
+ Min.   :  132.6   Min.   :  137.4   Min.   :  132.6   Min.   :  132.6  
+ 1st Qu.:  212.1   1st Qu.:  212.1   1st Qu.:  212.1   1st Qu.:  212.1  
+ Median :  245.0   Median :  245.0   Median :  244.9   Median :  244.9  
+ Mean   : 1247.1   Mean   : 1247.1   Mean   : 1247.0   Mean   : 1247.1  
+ 3rd Qu.:  508.3   3rd Qu.:  508.2   3rd Qu.:  507.7   3rd Qu.:  507.9  
+ Max.   :71775.3   Max.   :71775.3   Max.   :71775.3   Max.   :71775.3  
+   GSM820532         GSM820533      
+ Min.   :  132.6   Min.   :  132.6  
+ 1st Qu.:  212.1   1st Qu.:  212.1  
+ Median :  245.0   Median :  245.0  
+ Mean   : 1247.1   Mean   : 1247.1  
+ 3rd Qu.:  508.1   3rd Qu.:  508.0  
+ Max.   :71775.3   Max.   :71775.3  </code></pre>
+</div>
+</div>
+<p>From this output we clearly see that the values go beyond 16, so we will need to perform a <span class="math inline">\(log_2\)</span> transformation. A <code>boxplot</code> can also be generated to see if the data have been normalised. If so, the distributions of each sample should be highly similar.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">exprs</span>(gse) <span class="ot">&lt;-</span> <span class="fu">log2</span>(<span class="fu">exprs</span>(gse))</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">boxplot</span>(<span class="fu">exprs</span>(gse),<span class="at">outline=</span><span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="session4_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="inspect-the-clinical-variables" class="level2">
+<h2 class="anchored" data-anchor-id="inspect-the-clinical-variables">Inspect the clinical variables</h2>
+<p>Data submitted to GEO contain sample labels assigned by the experimenters, and some information about the processing protocol. All these data can be extracted by the <code>pData</code> function.</p>
+<p><strong>For your own data, you will have to decide which columns will be useful in the analysis</strong>. This will include the column giving the main comparison(s) of interest and any potential confounding factors. In this particular dataset it looks like <code>source_name_ch1</code> and <code>characteristics_ch1.1</code>.</p>
+<p>We can use the <code>select</code> function from <code>dplyr</code> to display just these columns of interest. At this stage it will also be useful to rename the columns to something more convenient using the <code>rename</code> function.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'dplyr'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following object is masked from 'package:Biobase':
+
+    combine</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:BiocGenerics':
+
+    combine, intersect, setdiff, union</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:stats':
+
+    filter, lag</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>sampleInfo <span class="ot">&lt;-</span> <span class="fu">pData</span>(gse)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>sampleInfo</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                               title geo_accession                status
+GSM820516  C1 (gene expression data)     GSM820516 Public on Nov 26 2012
+GSM820517  C2 (gene expression data)     GSM820517 Public on Nov 26 2012
+GSM820518  C3 (gene expression data)     GSM820518 Public on Nov 26 2012
+GSM820519  C4 (gene expression data)     GSM820519 Public on Nov 26 2012
+GSM820520  C5 (gene expression data)     GSM820520 Public on Nov 26 2012
+GSM820521  C6 (gene expression data)     GSM820521 Public on Nov 26 2012
+GSM820522  C7 (gene expression data)     GSM820522 Public on Nov 26 2012
+GSM820523  C8 (gene expression data)     GSM820523 Public on Nov 26 2012
+GSM820524  C9 (gene expression data)     GSM820524 Public on Nov 26 2012
+GSM820525 C10 (gene expression data)     GSM820525 Public on Nov 26 2012
+GSM820526 C11 (gene expression data)     GSM820526 Public on Nov 26 2012
+GSM820527 C12 (gene expression data)     GSM820527 Public on Nov 26 2012
+GSM820528 C13 (gene expression data)     GSM820528 Public on Nov 26 2012
+GSM820529 C14 (gene expression data)     GSM820529 Public on Nov 26 2012
+GSM820530 C15 (gene expression data)     GSM820530 Public on Nov 26 2012
+GSM820531 C16 (gene expression data)     GSM820531 Public on Nov 26 2012
+GSM820532 C17 (gene expression data)     GSM820532 Public on Nov 26 2012
+GSM820533 C18 (gene expression data)     GSM820533 Public on Nov 26 2012
+          submission_date last_update_date type channel_count source_name_ch1
+GSM820516     Oct 20 2011      Nov 26 2012  RNA             1           tumor
+GSM820517     Oct 20 2011      Nov 26 2012  RNA             1          normal
+GSM820518     Oct 20 2011      Nov 26 2012  RNA             1           tumor
+GSM820519     Oct 20 2011      Nov 26 2012  RNA             1          normal
+GSM820520     Oct 20 2011      Nov 26 2012  RNA             1           tumor
+GSM820521     Oct 20 2011      Nov 26 2012  RNA             1          normal
+GSM820522     Oct 20 2011      Nov 26 2012  RNA             1           tumor
+GSM820523     Oct 20 2011      Nov 26 2012  RNA             1          normal
+GSM820524     Oct 20 2011      Nov 26 2012  RNA             1           tumor
+GSM820525     Oct 20 2011      Nov 26 2012  RNA             1          normal
+GSM820526     Oct 20 2011      Nov 26 2012  RNA             1           tumor
+GSM820527     Oct 20 2011      Nov 26 2012  RNA             1          normal
+GSM820528     Oct 20 2011      Nov 26 2012  RNA             1           tumor
+GSM820529     Oct 20 2011      Nov 26 2012  RNA             1          normal
+GSM820530     Oct 20 2011      Nov 26 2012  RNA             1           tumor
+GSM820531     Oct 20 2011      Nov 26 2012  RNA             1          normal
+GSM820532     Oct 20 2011      Nov 26 2012  RNA             1           tumor
+GSM820533     Oct 20 2011      Nov 26 2012  RNA             1          normal
+          organism_ch1 characteristics_ch1 characteristics_ch1.1
+GSM820516 Homo sapiens       tissue: Colon            patient: 1
+GSM820517 Homo sapiens       tissue: Colon            patient: 1
+GSM820518 Homo sapiens       tissue: Colon            patient: 2
+GSM820519 Homo sapiens       tissue: Colon            patient: 2
+GSM820520 Homo sapiens       tissue: Colon            patient: 3
+GSM820521 Homo sapiens       tissue: Colon            patient: 3
+GSM820522 Homo sapiens       tissue: Colon            patient: 4
+GSM820523 Homo sapiens       tissue: Colon            patient: 4
+GSM820524 Homo sapiens       tissue: Colon            patient: 5
+GSM820525 Homo sapiens       tissue: Colon            patient: 5
+GSM820526 Homo sapiens       tissue: Colon            patient: 6
+GSM820527 Homo sapiens       tissue: Colon            patient: 6
+GSM820528 Homo sapiens       tissue: Colon            patient: 7
+GSM820529 Homo sapiens       tissue: Colon            patient: 7
+GSM820530 Homo sapiens       tissue: Colon            patient: 8
+GSM820531 Homo sapiens       tissue: Colon            patient: 8
+GSM820532 Homo sapiens       tissue: Colon            patient: 9
+GSM820533 Homo sapiens       tissue: Colon            patient: 9
+          characteristics_ch1.2 molecule_ch1
+GSM820516  t=tumor; n=normal: T    total RNA
+GSM820517  t=tumor; n=normal: N    total RNA
+GSM820518  t=tumor; n=normal: T    total RNA
+GSM820519  t=tumor; n=normal: N    total RNA
+GSM820520  t=tumor; n=normal: T    total RNA
+GSM820521  t=tumor; n=normal: N    total RNA
+GSM820522  t=tumor; n=normal: T    total RNA
+GSM820523  t=tumor; n=normal: N    total RNA
+GSM820524  t=tumor; n=normal: T    total RNA
+GSM820525  t=tumor; n=normal: N    total RNA
+GSM820526  t=tumor; n=normal: T    total RNA
+GSM820527  t=tumor; n=normal: N    total RNA
+GSM820528  t=tumor; n=normal: T    total RNA
+GSM820529  t=tumor; n=normal: N    total RNA
+GSM820530  t=tumor; n=normal: T    total RNA
+GSM820531  t=tumor; n=normal: N    total RNA
+GSM820532  t=tumor; n=normal: T    total RNA
+GSM820533  t=tumor; n=normal: N    total RNA
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  extract_protocol_ch1
+GSM820516 Tissues were mechanically disrupted and simultaneously homogenized in the presence of QIAzol Lysis reagent (Qiagen, Valencia, CA, USA), using a Mikrodismembrator (Braun Biotech International, Melsungen, Germany). RNA was extracted using the miRNeasy Mini kit (Qiagen) according to manufacturer’s instructions, followed by clean-up and DNase I treatment with QIAGEN RNeasy mini kit. RNA concentrations were measured with the NanoDrop ND-100 Spectrophotometer (NanoDrop Technologies, Wilmington, DE) while RNA quality was assessed with the Agilent 2100 Bioanalyzer (Agilent Technologies, Palo Alto, CA) using the RNA 6000 Nano kit (Agilent Technologies). Samples, included in the present analysis, had a RIN score greater than 5 and a 28S:18S rRNA ratio near to 2:1.
+GSM820517 Tissues were mechanically disrupted and simultaneously homogenized in the presence of QIAzol Lysis reagent (Qiagen, Valencia, CA, USA), using a Mikrodismembrator (Braun Biotech International, Melsungen, Germany). RNA was extracted using the miRNeasy Mini kit (Qiagen) according to manufacturer’s instructions, followed by clean-up and DNase I treatment with QIAGEN RNeasy mini kit. RNA concentrations were measured with the NanoDrop ND-100 Spectrophotometer (NanoDrop Technologies, Wilmington, DE) while RNA quality was assessed with the Agilent 2100 Bioanalyzer (Agilent Technologies, Palo Alto, CA) using the RNA 6000 Nano kit (Agilent Technologies). Samples, included in the present analysis, had a RIN score greater than 5 and a 28S:18S rRNA ratio near to 2:1.
+GSM820518 Tissues were mechanically disrupted and simultaneously homogenized in the presence of QIAzol Lysis reagent (Qiagen, Valencia, CA, USA), using a Mikrodismembrator (Braun Biotech International, Melsungen, Germany). RNA was extracted using the miRNeasy Mini kit (Qiagen) according to manufacturer’s instructions, followed by clean-up and DNase I treatment with QIAGEN RNeasy mini kit. RNA concentrations were measured with the NanoDrop ND-100 Spectrophotometer (NanoDrop Technologies, Wilmington, DE) while RNA quality was assessed with the Agilent 2100 Bioanalyzer (Agilent Technologies, Palo Alto, CA) using the RNA 6000 Nano kit (Agilent Technologies). Samples, included in the present analysis, had a RIN score greater than 5 and a 28S:18S rRNA ratio near to 2:1.
+GSM820519 Tissues were mechanically disrupted and simultaneously homogenized in the presence of QIAzol Lysis reagent (Qiagen, Valencia, CA, USA), using a Mikrodismembrator (Braun Biotech International, Melsungen, Germany). RNA was extracted using the miRNeasy Mini kit (Qiagen) according to manufacturer’s instructions, followed by clean-up and DNase I treatment with QIAGEN RNeasy mini kit. RNA concentrations were measured with the NanoDrop ND-100 Spectrophotometer (NanoDrop Technologies, Wilmington, DE) while RNA quality was assessed with the Agilent 2100 Bioanalyzer (Agilent Technologies, Palo Alto, CA) using the RNA 6000 Nano kit (Agilent Technologies). Samples, included in the present analysis, had a RIN score greater than 5 and a 28S:18S rRNA ratio near to 2:1.
+GSM820520 Tissues were mechanically disrupted and simultaneously homogenized in the presence of QIAzol Lysis reagent (Qiagen, Valencia, CA, USA), using a Mikrodismembrator (Braun Biotech International, Melsungen, Germany). RNA was extracted using the miRNeasy Mini kit (Qiagen) according to manufacturer’s instructions, followed by clean-up and DNase I treatment with QIAGEN RNeasy mini kit. RNA concentrations were measured with the NanoDrop ND-100 Spectrophotometer (NanoDrop Technologies, Wilmington, DE) while RNA quality was assessed with the Agilent 2100 Bioanalyzer (Agilent Technologies, Palo Alto, CA) using the RNA 6000 Nano kit (Agilent Technologies). Samples, included in the present analysis, had a RIN score greater than 5 and a 28S:18S rRNA ratio near to 2:1.
+GSM820521 Tissues were mechanically disrupted and simultaneously homogenized in the presence of QIAzol Lysis reagent (Qiagen, Valencia, CA, USA), using a Mikrodismembrator (Braun Biotech International, Melsungen, Germany). RNA was extracted using the miRNeasy Mini kit (Qiagen) according to manufacturer’s instructions, followed by clean-up and DNase I treatment with QIAGEN RNeasy mini kit. RNA concentrations were measured with the NanoDrop ND-100 Spectrophotometer (NanoDrop Technologies, Wilmington, DE) while RNA quality was assessed with the Agilent 2100 Bioanalyzer (Agilent Technologies, Palo Alto, CA) using the RNA 6000 Nano kit (Agilent Technologies). Samples, included in the present analysis, had a RIN score greater than 5 and a 28S:18S rRNA ratio near to 2:1.
+GSM820522 Tissues were mechanically disrupted and simultaneously homogenized in the presence of QIAzol Lysis reagent (Qiagen, Valencia, CA, USA), using a Mikrodismembrator (Braun Biotech International, Melsungen, Germany). RNA was extracted using the miRNeasy Mini kit (Qiagen) according to manufacturer’s instructions, followed by clean-up and DNase I treatment with QIAGEN RNeasy mini kit. RNA concentrations were measured with the NanoDrop ND-100 Spectrophotometer (NanoDrop Technologies, Wilmington, DE) while RNA quality was assessed with the Agilent 2100 Bioanalyzer (Agilent Technologies, Palo Alto, CA) using the RNA 6000 Nano kit (Agilent Technologies). Samples, included in the present analysis, had a RIN score greater than 5 and a 28S:18S rRNA ratio near to 2:1.
+GSM820523 Tissues were mechanically disrupted and simultaneously homogenized in the presence of QIAzol Lysis reagent (Qiagen, Valencia, CA, USA), using a Mikrodismembrator (Braun Biotech International, Melsungen, Germany). RNA was extracted using the miRNeasy Mini kit (Qiagen) according to manufacturer’s instructions, followed by clean-up and DNase I treatment with QIAGEN RNeasy mini kit. RNA concentrations were measured with the NanoDrop ND-100 Spectrophotometer (NanoDrop Technologies, Wilmington, DE) while RNA quality was assessed with the Agilent 2100 Bioanalyzer (Agilent Technologies, Palo Alto, CA) using the RNA 6000 Nano kit (Agilent Technologies). Samples, included in the present analysis, had a RIN score greater than 5 and a 28S:18S rRNA ratio near to 2:1.
+GSM820524 Tissues were mechanically disrupted and simultaneously homogenized in the presence of QIAzol Lysis reagent (Qiagen, Valencia, CA, USA), using a Mikrodismembrator (Braun Biotech International, Melsungen, Germany). RNA was extracted using the miRNeasy Mini kit (Qiagen) according to manufacturer’s instructions, followed by clean-up and DNase I treatment with QIAGEN RNeasy mini kit. RNA concentrations were measured with the NanoDrop ND-100 Spectrophotometer (NanoDrop Technologies, Wilmington, DE) while RNA quality was assessed with the Agilent 2100 Bioanalyzer (Agilent Technologies, Palo Alto, CA) using the RNA 6000 Nano kit (Agilent Technologies). Samples, included in the present analysis, had a RIN score greater than 5 and a 28S:18S rRNA ratio near to 2:1.
+GSM820525 Tissues were mechanically disrupted and simultaneously homogenized in the presence of QIAzol Lysis reagent (Qiagen, Valencia, CA, USA), using a Mikrodismembrator (Braun Biotech International, Melsungen, Germany). RNA was extracted using the miRNeasy Mini kit (Qiagen) according to manufacturer’s instructions, followed by clean-up and DNase I treatment with QIAGEN RNeasy mini kit. RNA concentrations were measured with the NanoDrop ND-100 Spectrophotometer (NanoDrop Technologies, Wilmington, DE) while RNA quality was assessed with the Agilent 2100 Bioanalyzer (Agilent Technologies, Palo Alto, CA) using the RNA 6000 Nano kit (Agilent Technologies). Samples, included in the present analysis, had a RIN score greater than 5 and a 28S:18S rRNA ratio near to 2:1.
+GSM820526 Tissues were mechanically disrupted and simultaneously homogenized in the presence of QIAzol Lysis reagent (Qiagen, Valencia, CA, USA), using a Mikrodismembrator (Braun Biotech International, Melsungen, Germany). RNA was extracted using the miRNeasy Mini kit (Qiagen) according to manufacturer’s instructions, followed by clean-up and DNase I treatment with QIAGEN RNeasy mini kit. RNA concentrations were measured with the NanoDrop ND-100 Spectrophotometer (NanoDrop Technologies, Wilmington, DE) while RNA quality was assessed with the Agilent 2100 Bioanalyzer (Agilent Technologies, Palo Alto, CA) using the RNA 6000 Nano kit (Agilent Technologies). Samples, included in the present analysis, had a RIN score greater than 5 and a 28S:18S rRNA ratio near to 2:1.
+GSM820527 Tissues were mechanically disrupted and simultaneously homogenized in the presence of QIAzol Lysis reagent (Qiagen, Valencia, CA, USA), using a Mikrodismembrator (Braun Biotech International, Melsungen, Germany). RNA was extracted using the miRNeasy Mini kit (Qiagen) according to manufacturer’s instructions, followed by clean-up and DNase I treatment with QIAGEN RNeasy mini kit. RNA concentrations were measured with the NanoDrop ND-100 Spectrophotometer (NanoDrop Technologies, Wilmington, DE) while RNA quality was assessed with the Agilent 2100 Bioanalyzer (Agilent Technologies, Palo Alto, CA) using the RNA 6000 Nano kit (Agilent Technologies). Samples, included in the present analysis, had a RIN score greater than 5 and a 28S:18S rRNA ratio near to 2:1.
+GSM820528 Tissues were mechanically disrupted and simultaneously homogenized in the presence of QIAzol Lysis reagent (Qiagen, Valencia, CA, USA), using a Mikrodismembrator (Braun Biotech International, Melsungen, Germany). RNA was extracted using the miRNeasy Mini kit (Qiagen) according to manufacturer’s instructions, followed by clean-up and DNase I treatment with QIAGEN RNeasy mini kit. RNA concentrations were measured with the NanoDrop ND-100 Spectrophotometer (NanoDrop Technologies, Wilmington, DE) while RNA quality was assessed with the Agilent 2100 Bioanalyzer (Agilent Technologies, Palo Alto, CA) using the RNA 6000 Nano kit (Agilent Technologies). Samples, included in the present analysis, had a RIN score greater than 5 and a 28S:18S rRNA ratio near to 2:1.
+GSM820529 Tissues were mechanically disrupted and simultaneously homogenized in the presence of QIAzol Lysis reagent (Qiagen, Valencia, CA, USA), using a Mikrodismembrator (Braun Biotech International, Melsungen, Germany). RNA was extracted using the miRNeasy Mini kit (Qiagen) according to manufacturer’s instructions, followed by clean-up and DNase I treatment with QIAGEN RNeasy mini kit. RNA concentrations were measured with the NanoDrop ND-100 Spectrophotometer (NanoDrop Technologies, Wilmington, DE) while RNA quality was assessed with the Agilent 2100 Bioanalyzer (Agilent Technologies, Palo Alto, CA) using the RNA 6000 Nano kit (Agilent Technologies). Samples, included in the present analysis, had a RIN score greater than 5 and a 28S:18S rRNA ratio near to 2:1.
+GSM820530 Tissues were mechanically disrupted and simultaneously homogenized in the presence of QIAzol Lysis reagent (Qiagen, Valencia, CA, USA), using a Mikrodismembrator (Braun Biotech International, Melsungen, Germany). RNA was extracted using the miRNeasy Mini kit (Qiagen) according to manufacturer’s instructions, followed by clean-up and DNase I treatment with QIAGEN RNeasy mini kit. RNA concentrations were measured with the NanoDrop ND-100 Spectrophotometer (NanoDrop Technologies, Wilmington, DE) while RNA quality was assessed with the Agilent 2100 Bioanalyzer (Agilent Technologies, Palo Alto, CA) using the RNA 6000 Nano kit (Agilent Technologies). Samples, included in the present analysis, had a RIN score greater than 5 and a 28S:18S rRNA ratio near to 2:1.
+GSM820531 Tissues were mechanically disrupted and simultaneously homogenized in the presence of QIAzol Lysis reagent (Qiagen, Valencia, CA, USA), using a Mikrodismembrator (Braun Biotech International, Melsungen, Germany). RNA was extracted using the miRNeasy Mini kit (Qiagen) according to manufacturer’s instructions, followed by clean-up and DNase I treatment with QIAGEN RNeasy mini kit. RNA concentrations were measured with the NanoDrop ND-100 Spectrophotometer (NanoDrop Technologies, Wilmington, DE) while RNA quality was assessed with the Agilent 2100 Bioanalyzer (Agilent Technologies, Palo Alto, CA) using the RNA 6000 Nano kit (Agilent Technologies). Samples, included in the present analysis, had a RIN score greater than 5 and a 28S:18S rRNA ratio near to 2:1.
+GSM820532 Tissues were mechanically disrupted and simultaneously homogenized in the presence of QIAzol Lysis reagent (Qiagen, Valencia, CA, USA), using a Mikrodismembrator (Braun Biotech International, Melsungen, Germany). RNA was extracted using the miRNeasy Mini kit (Qiagen) according to manufacturer’s instructions, followed by clean-up and DNase I treatment with QIAGEN RNeasy mini kit. RNA concentrations were measured with the NanoDrop ND-100 Spectrophotometer (NanoDrop Technologies, Wilmington, DE) while RNA quality was assessed with the Agilent 2100 Bioanalyzer (Agilent Technologies, Palo Alto, CA) using the RNA 6000 Nano kit (Agilent Technologies). Samples, included in the present analysis, had a RIN score greater than 5 and a 28S:18S rRNA ratio near to 2:1.
+GSM820533 Tissues were mechanically disrupted and simultaneously homogenized in the presence of QIAzol Lysis reagent (Qiagen, Valencia, CA, USA), using a Mikrodismembrator (Braun Biotech International, Melsungen, Germany). RNA was extracted using the miRNeasy Mini kit (Qiagen) according to manufacturer’s instructions, followed by clean-up and DNase I treatment with QIAGEN RNeasy mini kit. RNA concentrations were measured with the NanoDrop ND-100 Spectrophotometer (NanoDrop Technologies, Wilmington, DE) while RNA quality was assessed with the Agilent 2100 Bioanalyzer (Agilent Technologies, Palo Alto, CA) using the RNA 6000 Nano kit (Agilent Technologies). Samples, included in the present analysis, had a RIN score greater than 5 and a 28S:18S rRNA ratio near to 2:1.
+          label_ch1
+GSM820516    biotin
+GSM820517    biotin
+GSM820518    biotin
+GSM820519    biotin
+GSM820520    biotin
+GSM820521    biotin
+GSM820522    biotin
+GSM820523    biotin
+GSM820524    biotin
+GSM820525    biotin
+GSM820526    biotin
+GSM820527    biotin
+GSM820528    biotin
+GSM820529    biotin
+GSM820530    biotin
+GSM820531    biotin
+GSM820532    biotin
+GSM820533    biotin
+                                                                              label_protocol_ch1
+GSM820516 Total RNA from each sample was labeled according to the manufacturers recommendations.
+GSM820517 Total RNA from each sample was labeled according to the manufacturers recommendations.
+GSM820518 Total RNA from each sample was labeled according to the manufacturers recommendations.
+GSM820519 Total RNA from each sample was labeled according to the manufacturers recommendations.
+GSM820520 Total RNA from each sample was labeled according to the manufacturers recommendations.
+GSM820521 Total RNA from each sample was labeled according to the manufacturers recommendations.
+GSM820522 Total RNA from each sample was labeled according to the manufacturers recommendations.
+GSM820523 Total RNA from each sample was labeled according to the manufacturers recommendations.
+GSM820524 Total RNA from each sample was labeled according to the manufacturers recommendations.
+GSM820525 Total RNA from each sample was labeled according to the manufacturers recommendations.
+GSM820526 Total RNA from each sample was labeled according to the manufacturers recommendations.
+GSM820527 Total RNA from each sample was labeled according to the manufacturers recommendations.
+GSM820528 Total RNA from each sample was labeled according to the manufacturers recommendations.
+GSM820529 Total RNA from each sample was labeled according to the manufacturers recommendations.
+GSM820530 Total RNA from each sample was labeled according to the manufacturers recommendations.
+GSM820531 Total RNA from each sample was labeled according to the manufacturers recommendations.
+GSM820532 Total RNA from each sample was labeled according to the manufacturers recommendations.
+GSM820533 Total RNA from each sample was labeled according to the manufacturers recommendations.
+          taxid_ch1                             hyb_protocol
+GSM820516      9606 Standard Illumina hybridization protocol
+GSM820517      9606 Standard Illumina hybridization protocol
+GSM820518      9606 Standard Illumina hybridization protocol
+GSM820519      9606 Standard Illumina hybridization protocol
+GSM820520      9606 Standard Illumina hybridization protocol
+GSM820521      9606 Standard Illumina hybridization protocol
+GSM820522      9606 Standard Illumina hybridization protocol
+GSM820523      9606 Standard Illumina hybridization protocol
+GSM820524      9606 Standard Illumina hybridization protocol
+GSM820525      9606 Standard Illumina hybridization protocol
+GSM820526      9606 Standard Illumina hybridization protocol
+GSM820527      9606 Standard Illumina hybridization protocol
+GSM820528      9606 Standard Illumina hybridization protocol
+GSM820529      9606 Standard Illumina hybridization protocol
+GSM820530      9606 Standard Illumina hybridization protocol
+GSM820531      9606 Standard Illumina hybridization protocol
+GSM820532      9606 Standard Illumina hybridization protocol
+GSM820533      9606 Standard Illumina hybridization protocol
+                                scan_protocol  description
+GSM820516 Standard Illumina scanning protocol 4660559081_A
+GSM820517 Standard Illumina scanning protocol 4660559081_G
+GSM820518 Standard Illumina scanning protocol 4668112004_B
+GSM820519 Standard Illumina scanning protocol 4668112004_G
+GSM820520 Standard Illumina scanning protocol 4668112014_A
+GSM820521 Standard Illumina scanning protocol 4668112014_H
+GSM820522 Standard Illumina scanning protocol 4668112015_A
+GSM820523 Standard Illumina scanning protocol 4668112015_G
+GSM820524 Standard Illumina scanning protocol 4623109073_A
+GSM820525 Standard Illumina scanning protocol 4623109073_G
+GSM820526 Standard Illumina scanning protocol 4616494029_A
+GSM820527 Standard Illumina scanning protocol 4616494029_I
+GSM820528 Standard Illumina scanning protocol 4616494028_B
+GSM820529 Standard Illumina scanning protocol 4616494028_G
+GSM820530 Standard Illumina scanning protocol 4616494032_A
+GSM820531 Standard Illumina scanning protocol 4616494032_G
+GSM820532 Standard Illumina scanning protocol 4660559076_C
+GSM820533 Standard Illumina scanning protocol 4660559076_H
+                                                 data_processing platform_id
+GSM820516 The data were extracted  with BeadStudio software v3.8     GPL6947
+GSM820517 The data were extracted  with BeadStudio software v3.8     GPL6947
+GSM820518 The data were extracted  with BeadStudio software v3.8     GPL6947
+GSM820519 The data were extracted  with BeadStudio software v3.8     GPL6947
+GSM820520 The data were extracted  with BeadStudio software v3.8     GPL6947
+GSM820521 The data were extracted  with BeadStudio software v3.8     GPL6947
+GSM820522 The data were extracted  with BeadStudio software v3.8     GPL6947
+GSM820523 The data were extracted  with BeadStudio software v3.8     GPL6947
+GSM820524 The data were extracted  with BeadStudio software v3.8     GPL6947
+GSM820525 The data were extracted  with BeadStudio software v3.8     GPL6947
+GSM820526 The data were extracted  with BeadStudio software v3.8     GPL6947
+GSM820527 The data were extracted  with BeadStudio software v3.8     GPL6947
+GSM820528 The data were extracted  with BeadStudio software v3.8     GPL6947
+GSM820529 The data were extracted  with BeadStudio software v3.8     GPL6947
+GSM820530 The data were extracted  with BeadStudio software v3.8     GPL6947
+GSM820531 The data were extracted  with BeadStudio software v3.8     GPL6947
+GSM820532 The data were extracted  with BeadStudio software v3.8     GPL6947
+GSM820533 The data were extracted  with BeadStudio software v3.8     GPL6947
+             contact_name                      contact_email
+GSM820516 Loris,,De Cecco loris.dececco@istitutotumori.mi.it
+GSM820517 Loris,,De Cecco loris.dececco@istitutotumori.mi.it
+GSM820518 Loris,,De Cecco loris.dececco@istitutotumori.mi.it
+GSM820519 Loris,,De Cecco loris.dececco@istitutotumori.mi.it
+GSM820520 Loris,,De Cecco loris.dececco@istitutotumori.mi.it
+GSM820521 Loris,,De Cecco loris.dececco@istitutotumori.mi.it
+GSM820522 Loris,,De Cecco loris.dececco@istitutotumori.mi.it
+GSM820523 Loris,,De Cecco loris.dececco@istitutotumori.mi.it
+GSM820524 Loris,,De Cecco loris.dececco@istitutotumori.mi.it
+GSM820525 Loris,,De Cecco loris.dececco@istitutotumori.mi.it
+GSM820526 Loris,,De Cecco loris.dececco@istitutotumori.mi.it
+GSM820527 Loris,,De Cecco loris.dececco@istitutotumori.mi.it
+GSM820528 Loris,,De Cecco loris.dececco@istitutotumori.mi.it
+GSM820529 Loris,,De Cecco loris.dececco@istitutotumori.mi.it
+GSM820530 Loris,,De Cecco loris.dececco@istitutotumori.mi.it
+GSM820531 Loris,,De Cecco loris.dececco@istitutotumori.mi.it
+GSM820532 Loris,,De Cecco loris.dececco@istitutotumori.mi.it
+GSM820533 Loris,,De Cecco loris.dececco@istitutotumori.mi.it
+                        contact_institute contact_address contact_city
+GSM820516 IRCSS Istituto Nazionale Tumori  via Venezian 1        Milan
+GSM820517 IRCSS Istituto Nazionale Tumori  via Venezian 1        Milan
+GSM820518 IRCSS Istituto Nazionale Tumori  via Venezian 1        Milan
+GSM820519 IRCSS Istituto Nazionale Tumori  via Venezian 1        Milan
+GSM820520 IRCSS Istituto Nazionale Tumori  via Venezian 1        Milan
+GSM820521 IRCSS Istituto Nazionale Tumori  via Venezian 1        Milan
+GSM820522 IRCSS Istituto Nazionale Tumori  via Venezian 1        Milan
+GSM820523 IRCSS Istituto Nazionale Tumori  via Venezian 1        Milan
+GSM820524 IRCSS Istituto Nazionale Tumori  via Venezian 1        Milan
+GSM820525 IRCSS Istituto Nazionale Tumori  via Venezian 1        Milan
+GSM820526 IRCSS Istituto Nazionale Tumori  via Venezian 1        Milan
+GSM820527 IRCSS Istituto Nazionale Tumori  via Venezian 1        Milan
+GSM820528 IRCSS Istituto Nazionale Tumori  via Venezian 1        Milan
+GSM820529 IRCSS Istituto Nazionale Tumori  via Venezian 1        Milan
+GSM820530 IRCSS Istituto Nazionale Tumori  via Venezian 1        Milan
+GSM820531 IRCSS Istituto Nazionale Tumori  via Venezian 1        Milan
+GSM820532 IRCSS Istituto Nazionale Tumori  via Venezian 1        Milan
+GSM820533 IRCSS Istituto Nazionale Tumori  via Venezian 1        Milan
+          contact_zip/postal_code contact_country supplementary_file
+GSM820516                   20133           Italy               NONE
+GSM820517                   20133           Italy               NONE
+GSM820518                   20133           Italy               NONE
+GSM820519                   20133           Italy               NONE
+GSM820520                   20133           Italy               NONE
+GSM820521                   20133           Italy               NONE
+GSM820522                   20133           Italy               NONE
+GSM820523                   20133           Italy               NONE
+GSM820524                   20133           Italy               NONE
+GSM820525                   20133           Italy               NONE
+GSM820526                   20133           Italy               NONE
+GSM820527                   20133           Italy               NONE
+GSM820528                   20133           Italy               NONE
+GSM820529                   20133           Italy               NONE
+GSM820530                   20133           Italy               NONE
+GSM820531                   20133           Italy               NONE
+GSM820532                   20133           Italy               NONE
+GSM820533                   20133           Italy               NONE
+          data_row_count patient:ch1 t=tumor; n=normal:ch1 tissue:ch1
+GSM820516          48803           1                     T      Colon
+GSM820517          48803           1                     N      Colon
+GSM820518          48803           2                     T      Colon
+GSM820519          48803           2                     N      Colon
+GSM820520          48803           3                     T      Colon
+GSM820521          48803           3                     N      Colon
+GSM820522          48803           4                     T      Colon
+GSM820523          48803           4                     N      Colon
+GSM820524          48803           5                     T      Colon
+GSM820525          48803           5                     N      Colon
+GSM820526          48803           6                     T      Colon
+GSM820527          48803           6                     N      Colon
+GSM820528          48803           7                     T      Colon
+GSM820529          48803           7                     N      Colon
+GSM820530          48803           8                     T      Colon
+GSM820531          48803           8                     N      Colon
+GSM820532          48803           9                     T      Colon
+GSM820533          48803           9                     N      Colon</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="do">## source_name_ch1 and characteristics_ch1.1 seem to contain factors we might need for the analysis. Let's pick just those columns</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>sampleInfo <span class="ot">&lt;-</span> <span class="fu">select</span>(sampleInfo, source_name_ch1,characteristics_ch1<span class="fl">.1</span>)</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="do">## Optionally, rename to more convenient column names</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>sampleInfo <span class="ot">&lt;-</span> <span class="fu">rename</span>(sampleInfo,<span class="at">group =</span> source_name_ch1, <span class="at">patient=</span>characteristics_ch1<span class="fl">.1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Our sample information is therefore:-</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>sampleInfo</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>           group    patient
+GSM820516  tumor patient: 1
+GSM820517 normal patient: 1
+GSM820518  tumor patient: 2
+GSM820519 normal patient: 2
+GSM820520  tumor patient: 3
+GSM820521 normal patient: 3
+GSM820522  tumor patient: 4
+GSM820523 normal patient: 4
+GSM820524  tumor patient: 5
+GSM820525 normal patient: 5
+GSM820526  tumor patient: 6
+GSM820527 normal patient: 6
+GSM820528  tumor patient: 7
+GSM820529 normal patient: 7
+GSM820530  tumor patient: 8
+GSM820531 normal patient: 8
+GSM820532  tumor patient: 9
+GSM820533 normal patient: 9</code></pre>
+</div>
+</div>
+</section>
+<section id="sample-clustering-and-principal-components-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="sample-clustering-and-principal-components-analysis">Sample clustering and Principal Components Analysis</h2>
+<p>Unsupervised analysis is a good way to get an understanding of the sources of variation in the data. It can also identify potential outlier samples.</p>
+<p>The function <code>cor</code> can calculate the correlation (on scale 0 - 1) in a pairwise fashion between all samples. This can be then visualised on a heatmap. Among the many options for creating heatmaps in R, the <code>pheatmap</code> library is one of the more popular ones. The only argument it requires is a matrix of numerical values (such as the correlation matrix).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pheatmap)</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="do">## argument use="c" stops an error if there are any missing data points</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>corMatrix <span class="ot">&lt;-</span> <span class="fu">cor</span>(<span class="fu">exprs</span>(gse),<span class="at">use=</span><span class="st">"c"</span>)</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="fu">pheatmap</span>(corMatrix)                </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="session4_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>We can incorporate sample information onto the plot to try and understand the clustering. We have already created such a data frame previously (<code>sampleInfo</code>). However, we need to take care that the rownames of these data match the columns of the correlation matrix.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Print the rownames of the sample information and check it matches the correlation matrix</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(sampleInfo)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "GSM820516" "GSM820517" "GSM820518" "GSM820519" "GSM820520" "GSM820521"
+ [7] "GSM820522" "GSM820523" "GSM820524" "GSM820525" "GSM820526" "GSM820527"
+[13] "GSM820528" "GSM820529" "GSM820530" "GSM820531" "GSM820532" "GSM820533"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(corMatrix)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "GSM820516" "GSM820517" "GSM820518" "GSM820519" "GSM820520" "GSM820521"
+ [7] "GSM820522" "GSM820523" "GSM820524" "GSM820525" "GSM820526" "GSM820527"
+[13] "GSM820528" "GSM820529" "GSM820530" "GSM820531" "GSM820532" "GSM820533"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="do">## If not, force the rownames to match the columns</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(sampleInfo) <span class="ot">&lt;-</span> <span class="fu">colnames</span>(corMatrix)</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="fu">pheatmap</span>(corMatrix,</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">annotation_col=</span>sampleInfo)    </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="session4_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Here we see that the main separation is due to normal vs tumours; as we hope.</p>
+<p>A complementary approach is to use Principal Components Analysis (PCA). There is a nice explanation in this youtube video.</p>
+<p>https://www.youtube.com/watch?v=0Jp4gsfOLMs</p>
+<p>It is important to <em>transpose</em> the expression matrix, otherwise R will try and compute PCA on the genes (instead of samples) and quickly run out of memory.</p>
+<p>As PCA is an unsupervised method, the known sample groups are not taken into account. However, we can add labels when we plot the results. The <code>ggplot2</code> package is particularly convenient for this. The <code>ggrepel</code> package can be used to postion the text labels more cleverly so they can be read.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggrepel)</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="do">## MAKE SURE TO TRANSPOSE THE EXPRESSION MATRIX</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>pca <span class="ot">&lt;-</span> <span class="fu">prcomp</span>(<span class="fu">t</span>(<span class="fu">exprs</span>(gse)))</span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a><span class="do">## Join the PCs to the sample information</span></span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cbind</span>(sampleInfo, pca<span class="sc">$</span>x) <span class="sc">%&gt;%</span> </span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> PC1, <span class="at">y=</span>PC2, <span class="at">col=</span>group,<span class="at">label=</span><span class="fu">paste</span>(<span class="st">"Patient"</span>, patient))) <span class="sc">+</span> <span class="fu">geom_point</span>() <span class="sc">+</span> <span class="fu">geom_text_repel</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="session4_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p><strong>What happens if we spot a batch effect?</strong></p>
+<p>Nothing at this stage. Provided the experimental design is sensible (i.e.&nbsp;representatives from all samples groups are present in each batch) we can correct for batch when we run the differential expression analysis.</p>
+<p><strong>What happens if we detect outliers?</strong></p>
+<p>If we suspect some samples are outliers we can remove them for further analysis</p>
+</section>
+<section id="differential-expression" class="level2">
+<h2 class="anchored" data-anchor-id="differential-expression">Differential Expression</h2>
+<p>By far the most-popular package for performing differential expression is <code>limma</code>. The user-guide is extensive and covers the theory behind the analysis and many use-cases (Chapters 9 and 17 for single-channel data such as Illumina and Affymetrix)</p>
+<p>https://bioconductor.org/packages/release/bioc/vignettes/limma/inst/doc/usersguide.pdf</p>
+<p>Crucially, we have to allocate the samples in our dataset to the sample groups of interest. A useful function is <code>model.matrix</code>, which will create a <em>design matrix</em> from one of the columns in your <code>sampleInfo</code>. Here I choose <code>sampleInfo$group</code>.</p>
+<p>The design matrix is a matrix of <code>0</code> and <code>1</code>s; one row for each sample and one column for each sample group. A <code>1</code> in a particular row and column indicates that a given sample (the row) belongs to a given group (column).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(limma)</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>design <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(<span class="sc">~</span><span class="dv">0</span><span class="sc">+</span>sampleInfo<span class="sc">$</span>group)</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>design</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   sampleInfo$groupnormal sampleInfo$grouptumor
+1                       0                     1
+2                       1                     0
+3                       0                     1
+4                       1                     0
+5                       0                     1
+6                       1                     0
+7                       0                     1
+8                       1                     0
+9                       0                     1
+10                      1                     0
+11                      0                     1
+12                      1                     0
+13                      0                     1
+14                      1                     0
+15                      0                     1
+16                      1                     0
+17                      0                     1
+18                      1                     0
+attr(,"assign")
+[1] 1 1
+attr(,"contrasts")
+attr(,"contrasts")$`sampleInfo$group`
+[1] "contr.treatment"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="do">## the column names are a bit ugly, so we will rename</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(design) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Normal"</span>,<span class="st">"Tumour"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>It has been demonstrated that our power to detect differential expression can be improved if we filter lowly-expressed genes prior to performing the analysis. Quite how one defines a gene being expressed may vary from experiment to experiment, so a cut-off that will work for all datasets is not feasible. Here we consider that aroudn 50% of our genes will not be expressed, and use the median expression level as a cut-off.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">exprs</span>(gse))</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="do">## calculate median expression level</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>cutoff <span class="ot">&lt;-</span> <span class="fu">median</span>(<span class="fu">exprs</span>(gse))</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a><span class="do">## TRUE or FALSE for whether each gene is "expressed" in each sample</span></span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>is_expressed <span class="ot">&lt;-</span> <span class="fu">exprs</span>(gse) <span class="sc">&gt;</span> cutoff</span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a><span class="do">## Identify genes expressed in more than 2 samples</span></span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a>keep <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(is_expressed) <span class="sc">&gt;</span> <span class="dv">2</span></span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a><span class="do">## check how many genes are removed / retained.</span></span>
+<span id="cb45-14"><a href="#cb45-14" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(keep)</span>
+<span id="cb45-15"><a href="#cb45-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-16"><a href="#cb45-16" aria-hidden="true" tabindex="-1"></a><span class="do">## subset to just those expressed genes</span></span>
+<span id="cb45-17"><a href="#cb45-17" aria-hidden="true" tabindex="-1"></a>gse <span class="ot">&lt;-</span> gse[keep,]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The <code>lmFit</code> function is used to fit the model to the data. The result of which is to estimate the expression level in each of the groups that we specified.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">lmFit</span>(<span class="fu">exprs</span>(gse), design)</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(fit<span class="sc">$</span>coefficients)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                Normal    Tumour
+ILMN_1343291 16.087740 16.004200
+ILMN_1343295 14.032346 14.699567
+ILMN_1651199  7.786860  7.763617
+ILMN_1651209  8.079803  8.002217
+ILMN_1651210  7.555458  7.659205
+ILMN_1651221  7.816231  7.801812</code></pre>
+</div>
+</div>
+<p>In order to perform the <em>differential</em> analysis, we have to define the contrast that we are interested in. In our case we only have two groups and one contrast of interest. Multiple contrasts can be defined in the <code>makeContrasts</code> function.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>contrasts <span class="ot">&lt;-</span> <span class="fu">makeContrasts</span>(Tumour <span class="sc">-</span> Normal, <span class="at">levels=</span>design)</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a><span class="do">## can define multiple contrasts</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a><span class="do">## e.g. makeContrasts(Group1 - Group2, Group2 - Group3,....levels=design)</span></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>fit2 <span class="ot">&lt;-</span> <span class="fu">contrasts.fit</span>(fit, contrasts)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Finally, apply the <em>empirical Bayes’</em> step to get our differential expression statistics and p-values.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>fit2 <span class="ot">&lt;-</span> <span class="fu">eBayes</span>(fit2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We usually get our first look at the results by using the <code>topTable</code> command</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">topTable</span>(fit2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                 logFC   AveExpr         t      P.Value    adj.P.Val        B
+ILMN_1704294  3.269052  9.833508  20.85916 4.270310e-14 2.084039e-09 19.87723
+ILMN_1813704  4.749574 10.782232  15.82024 4.927422e-12 1.202365e-07 16.50749
+ILMN_1724686  3.627208 10.814662  15.12049 1.056845e-11 1.719240e-07 15.91540
+ILMN_1811598 -2.380786  9.150986 -13.57845 6.358124e-11 7.757388e-07 14.47449
+ILMN_1659990  1.259224  8.898440  12.63142 2.086244e-10 2.036299e-06 13.48578
+ILMN_1763749 -5.039637 11.894505 -12.24586 3.455391e-10 2.810558e-06 13.05824
+ILMN_1652431 -5.998422 11.580616 -11.74902 6.746951e-10 4.703878e-06 12.48460
+ILMN_1702858 -1.511602  9.233874 -11.54055 8.993340e-10 5.486275e-06 12.23599
+ILMN_1663866  2.038634 14.040020  10.91810 2.173782e-09 1.178746e-05 11.46451
+ILMN_1809456 -1.181448  8.365228 -10.66005 3.169361e-09 1.344462e-05 11.13140</code></pre>
+</div>
+</div>
+<p>The <code>topTable</code> function automatically displays the results for the first contrast. If you want to see results for other contrasts</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="fu">topTable</span>(fit2, <span class="at">coef=</span><span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                 logFC   AveExpr         t      P.Value    adj.P.Val        B
+ILMN_1704294  3.269052  9.833508  20.85916 4.270310e-14 2.084039e-09 19.87723
+ILMN_1813704  4.749574 10.782232  15.82024 4.927422e-12 1.202365e-07 16.50749
+ILMN_1724686  3.627208 10.814662  15.12049 1.056845e-11 1.719240e-07 15.91540
+ILMN_1811598 -2.380786  9.150986 -13.57845 6.358124e-11 7.757388e-07 14.47449
+ILMN_1659990  1.259224  8.898440  12.63142 2.086244e-10 2.036299e-06 13.48578
+ILMN_1763749 -5.039637 11.894505 -12.24586 3.455391e-10 2.810558e-06 13.05824
+ILMN_1652431 -5.998422 11.580616 -11.74902 6.746951e-10 4.703878e-06 12.48460
+ILMN_1702858 -1.511602  9.233874 -11.54055 8.993340e-10 5.486275e-06 12.23599
+ILMN_1663866  2.038634 14.040020  10.91810 2.173782e-09 1.178746e-05 11.46451
+ILMN_1809456 -1.181448  8.365228 -10.66005 3.169361e-09 1.344462e-05 11.13140</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="do">### to see the results of the second contrast (if it exists)</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="do">## topTable(fit2, coef=2)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>If we want to know how many genes are differentially-expressed overall we can use the <code>decideTests</code> function.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">decideTests</span>(fit2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>TestResults matrix
+              Contrasts
+               Tumour - Normal
+  ILMN_1343291               0
+  ILMN_1343295               0
+  ILMN_1651199               0
+  ILMN_1651209               0
+  ILMN_1651210               0
+48798 more rows ...</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="fu">decideTests</span>(fit2))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+   -1     0     1 
+ 1097 46219  1487 </code></pre>
+</div>
+</div>
+<p>DESeq2</p>
+</section>
+<section id="summarized-experiment" class="level2">
+<h2 class="anchored" data-anchor-id="summarized-experiment">Summarized Experiment</h2>
+<p>This section introduces another broadly useful package and data structure, the <a href="https://bioconductor.org/packages/SummarizedExperiment">SummarizedExperiment</a> package and <code>SummarizedExperiment</code> object.</p>
+<p>The <code>SummarizedExperiment</code> object has matrix-like properties – it has two dimensions and can be subset by ‘rows’ and ‘columns’. The <code>assay()</code> data of a <code>SummarizedExperiment</code> experiment contains one or more matrix-like objects where rows represent features of interest (e.g., genes), columns represent samples, and elements of the matrix represent results of a genomic assay (e.g., counts of reads overlaps genes in each sample of an bulk RNA-seq differential expression assay.</p>
+<p><strong>Object construction</strong></p>
+<p>The <code>SummarizedExperiment</code> coordinates assays with (optional) descriptions of rows and columns. We start by reading in a simple <code>data.frame</code> describing 8 samples from an RNASeq experiment looking at dexamethasone treatment across 4 human smooth muscle cell lines; use <code>browseVignettes("airway")</code> for a more complete description of the experiment and data processing. Read the column data in using <code>file.choose()</code> and <code>read.csv()</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="co">#fname &lt;- file.choose()  # airway_colData.csv</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a><span class="co">#fname</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We want the first column the the data to be treated as row names (sample identifiers) in the <code>data.frame</code>, so <code>read.csv()</code> has an extra argument to indicate this.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>colData <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(fname, <span class="at">row.names =</span> <span class="dv">1</span>)</span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(colData)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>           SampleName    cell   dex albut        Run avgLength Experiment
+SRR1039508 GSM1275862  N61311 untrt untrt SRR1039508       126  SRX384345
+SRR1039509 GSM1275863  N61311   trt untrt SRR1039509       126  SRX384346
+SRR1039512 GSM1275866 N052611 untrt untrt SRR1039512       126  SRX384349
+SRR1039513 GSM1275867 N052611   trt untrt SRR1039513        87  SRX384350
+SRR1039516 GSM1275870 N080611 untrt untrt SRR1039516       120  SRX384353
+SRR1039517 GSM1275871 N080611   trt untrt SRR1039517       126  SRX384354
+              Sample    BioSample
+SRR1039508 SRS508568 SAMN02422669
+SRR1039509 SRS508567 SAMN02422675
+SRR1039512 SRS508571 SAMN02422678
+SRR1039513 SRS508572 SAMN02422670
+SRR1039516 SRS508575 SAMN02422682
+SRR1039517 SRS508576 SAMN02422673</code></pre>
+</div>
+</div>
+<p>The data are from the Short Read Archive, and the row names, <code>SampleName</code>, <code>Run</code>, <code>Experiment</code>, <code>Sampel</code>, and <code>BioSample</code> columns are classifications from the archive. Additional columns include:</p>
+<ul>
+<li><code>cell</code>: the cell line used. There are four cell lines.</li>
+<li><code>dex</code>: whether the sample was untreated, or treated with dexamethasone.</li>
+<li><code>albut</code>: a second treatment, which we ignore</li>
+<li><code>avgLength</code>: the sample-specific average length of the RNAseq reads estimated in the experiment.</li>
+</ul>
+<p><strong>Assay data</strong></p>
+<p>Now import the assay data from the file “airway_counts.csv”</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>fname <span class="ot">&lt;-</span> <span class="fu">file.choose</span>()  <span class="co"># airway_counts.csv</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>fname</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>counts <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(fname, <span class="at">row.names=</span><span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Although the data are read as a <code>data.frame</code>, all columns are of the same type (integer-valued) and represent the same attribute; the data is really a <code>matrix</code> rather than <code>data.frame</code>, so we coerce to matrix using <code>as.matrix()</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>counts <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(counts)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We see the dimensions and first few rows of the counts matrix</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(counts)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 33469     8</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(counts)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                SRR1039508 SRR1039509 SRR1039512 SRR1039513 SRR1039516
+ENSG00000000003        679        448        873        408       1138
+ENSG00000000419        467        515        621        365        587
+ENSG00000000457        260        211        263        164        245
+ENSG00000000460         60         55         40         35         78
+ENSG00000000938          0          0          2          0          1
+ENSG00000000971       3251       3679       6177       4252       6721
+                SRR1039517 SRR1039520 SRR1039521
+ENSG00000000003       1047        770        572
+ENSG00000000419        799        417        508
+ENSG00000000457        331        233        229
+ENSG00000000460         63         76         60
+ENSG00000000938          0          0          0
+ENSG00000000971      11027       5176       7995</code></pre>
+</div>
+</div>
+<p>It’s interesting to think about what the counts mean – for ENSG00000000003, sample SRR1039508 had 679 reads that overlapped this gene, sample SRR1039509 had 448 reads, etc. Notice that for this gene there seems to be a consistent pattern – within a cell line, the read counts in the untreated group are always larger than the read counts for the treated group. This and other basic observations from ‘looking at’ the data motivate many steps in a rigorous RNASeq differential expression analysis.</p>
+<p><strong>Creating a <code>SummarizedExperiment</code> object</strong></p>
+<p>There is considerable value in tightly coupling of the column data with the assay data, as it reduces the chances of bookkeeping errors as we work with our data.</p>
+<p>Attach the <a href="https://bioconductor.org/packages/SummarizedExperiment">SummarizedExperiment</a> library to our <em>R</em> session.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"SummarizedExperiment"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Use the <code>SummarizedExperiment()</code> function to coordinate the assay and column data; this function uses row and column names to make sure the correct assay columns are described by the correct column data rows.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>se <span class="ot">&lt;-</span> <span class="fu">SummarizedExperiment</span>(<span class="at">assay =</span> <span class="fu">list</span>(<span class="at">count=</span>counts), <span class="at">colData =</span> colData)</span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>se</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>class: SummarizedExperiment 
+dim: 33469 8 
+metadata(0):
+assays(1): count
+rownames(33469): ENSG00000000003 ENSG00000000419 ... ENSG00000273492
+  ENSG00000273493
+rowData names(0):
+colnames(8): SRR1039508 SRR1039509 ... SRR1039520 SRR1039521
+colData names(9): SampleName cell ... Sample BioSample</code></pre>
+</div>
+</div>
+<p>It is straight-forward to use <code>subset()</code> on <code>SummarizedExperiment</code> to create subsets of the data in a coordinated way. Remember that a <code>SummarizedExperiment</code> is conceptually two-dimensional (matrix-like), and in the example below we are subsetting on the second dimension.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb72"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="fu">subset</span>(se, , dex <span class="sc">==</span> <span class="st">"trt"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>class: SummarizedExperiment 
+dim: 33469 4 
+metadata(0):
+assays(1): count
+rownames(33469): ENSG00000000003 ENSG00000000419 ... ENSG00000273492
+  ENSG00000273493
+rowData names(0):
+colnames(4): SRR1039509 SRR1039513 SRR1039517 SRR1039521
+colData names(9): SampleName cell ... Sample BioSample</code></pre>
+</div>
+</div>
+<p>There are also accessors that extract data from the <code>SummarizedExperiment</code>. For instance, we can use <code>assay()</code> to extract the count matrix, and <code>colSums()</code> to calculate the library size (total number of reads overlapping genes in each sample).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb74"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colSums</span>(<span class="fu">assay</span>(se))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>SRR1039508 SRR1039509 SRR1039512 SRR1039513 SRR1039516 SRR1039517 SRR1039520 
+  20637971   18809481   25348649   15163415   24448408   30818215   19126151 
+SRR1039521 
+  21164133 </code></pre>
+</div>
+</div>
+<p>Note that library sizes differ by a factor of 2 from largest to smallest; how would this influence the interpretation of counts in individual cells of the assay data?</p>
+<p>It might be useful to remember important computations in a way that is robust, e.g.,</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>se<span class="sc">$</span>lib.size <span class="ot">&lt;-</span> <span class="fu">colSums</span>(<span class="fu">assay</span>(se))</span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a><span class="fu">colData</span>(se)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>DataFrame with 8 rows and 10 columns
+            SampleName        cell         dex       albut         Run
+           &lt;character&gt; &lt;character&gt; &lt;character&gt; &lt;character&gt; &lt;character&gt;
+SRR1039508  GSM1275862      N61311       untrt       untrt  SRR1039508
+SRR1039509  GSM1275863      N61311         trt       untrt  SRR1039509
+SRR1039512  GSM1275866     N052611       untrt       untrt  SRR1039512
+SRR1039513  GSM1275867     N052611         trt       untrt  SRR1039513
+SRR1039516  GSM1275870     N080611       untrt       untrt  SRR1039516
+SRR1039517  GSM1275871     N080611         trt       untrt  SRR1039517
+SRR1039520  GSM1275874     N061011       untrt       untrt  SRR1039520
+SRR1039521  GSM1275875     N061011         trt       untrt  SRR1039521
+           avgLength  Experiment      Sample    BioSample  lib.size
+           &lt;integer&gt; &lt;character&gt; &lt;character&gt;  &lt;character&gt; &lt;numeric&gt;
+SRR1039508       126   SRX384345   SRS508568 SAMN02422669  20637971
+SRR1039509       126   SRX384346   SRS508567 SAMN02422675  18809481
+SRR1039512       126   SRX384349   SRS508571 SAMN02422678  25348649
+SRR1039513        87   SRX384350   SRS508572 SAMN02422670  15163415
+SRR1039516       120   SRX384353   SRS508575 SAMN02422682  24448408
+SRR1039517       126   SRX384354   SRS508576 SAMN02422673  30818215
+SRR1039520       101   SRX384357   SRS508579 SAMN02422683  19126151
+SRR1039521        98   SRX384358   SRS508580 SAMN02422677  21164133</code></pre>
+</div>
+</div>
+<p><strong>Exercises</strong></p>
+<div class="callout callout-style-simple callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Basic
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>Subset the <code>SummarizedExperiment</code> object <code>se</code> created above to genes (rows) with at least 8 reads mapped across all samples.</li>
+</ol>
+<p><em>Hint: use <code>rowSums</code>.</em></p>
+<ol start="2" type="1">
+<li>Scale the read counts by library size, i.e.&nbsp;divide each column of <code>assay(se)</code> by the corresponding <code>lib.size</code> of each sample (column). Multiply the resulting scaled counts by <code>10^6</code> to obtain counts per million reads mapped.</li>
+</ol>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Solution
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="co">#1</span></span>
+<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a><span class="co">#Method 1</span></span>
+<span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a>rs <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(<span class="fu">assay</span>(se))</span>
+<span id="cb78-4"><a href="#cb78-4" aria-hidden="true" tabindex="-1"></a>se.sub <span class="ot">&lt;-</span> <span class="fu">subset</span>(se, rs<span class="sc">&gt;</span><span class="dv">7</span>,)</span>
+<span id="cb78-5"><a href="#cb78-5" aria-hidden="true" tabindex="-1"></a><span class="co">#Method 2</span></span>
+<span id="cb78-6"><a href="#cb78-6" aria-hidden="true" tabindex="-1"></a>ind <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(<span class="fu">assay</span>(se)) <span class="sc">&gt;=</span> <span class="dv">8</span></span>
+<span id="cb78-7"><a href="#cb78-7" aria-hidden="true" tabindex="-1"></a>se.sub <span class="ot">&lt;-</span> se[ind,]</span>
+<span id="cb78-8"><a href="#cb78-8" aria-hidden="true" tabindex="-1"></a><span class="co">#2</span></span>
+<span id="cb78-9"><a href="#cb78-9" aria-hidden="true" tabindex="-1"></a><span class="co"># scale by library size</span></span>
+<span id="cb78-10"><a href="#cb78-10" aria-hidden="true" tabindex="-1"></a><span class="co"># option 1: loop  </span></span>
+<span id="cb78-11"><a href="#cb78-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>)</span>
+<span id="cb78-12"><a href="#cb78-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assay</span>(se.sub)[,i] <span class="ot">&lt;-</span> <span class="fu">assay</span>(se.sub)[,i] <span class="sc">/</span> se<span class="sc">$</span>lib.size[i]</span>
+<span id="cb78-13"><a href="#cb78-13" aria-hidden="true" tabindex="-1"></a><span class="fu">assay</span>(se.sub)[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>,<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                  SRR1039508   SRR1039509   SRR1039512   SRR1039513
+ENSG00000000003 3.290052e-05 2.381778e-05 3.443971e-05 2.690687e-05
+ENSG00000000419 2.262819e-05 2.737981e-05 2.449835e-05 2.407109e-05
+ENSG00000000457 1.259814e-05 1.121775e-05 1.037531e-05 1.081551e-05
+ENSG00000000460 2.907263e-06 2.924057e-06 1.577993e-06 2.308187e-06
+ENSG00000000971 1.575252e-04 1.955929e-04 2.436816e-04 2.804118e-04
+                  SRR1039516
+ENSG00000000003 4.654700e-05
+ENSG00000000419 2.400974e-05
+ENSG00000000457 1.002110e-05
+ENSG00000000460 3.190392e-06
+ENSG00000000971 2.749054e-04</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="co"># option 2: vectorized</span></span>
+<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a>se.sub <span class="ot">&lt;-</span> se[ind,]</span>
+<span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a>tassay <span class="ot">&lt;-</span> <span class="fu">t</span>(<span class="fu">assay</span>(se.sub)) <span class="sc">/</span> se<span class="sc">$</span>lib.size</span>
+<span id="cb80-4"><a href="#cb80-4" aria-hidden="true" tabindex="-1"></a><span class="fu">assay</span>(se.sub) <span class="ot">&lt;-</span> <span class="fu">t</span>(tassay)</span>
+<span id="cb80-5"><a href="#cb80-5" aria-hidden="true" tabindex="-1"></a><span class="fu">assay</span>(se.sub)[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>,<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                  SRR1039508   SRR1039509   SRR1039512   SRR1039513
+ENSG00000000003 3.290052e-05 2.381778e-05 3.443971e-05 2.690687e-05
+ENSG00000000419 2.262819e-05 2.737981e-05 2.449835e-05 2.407109e-05
+ENSG00000000457 1.259814e-05 1.121775e-05 1.037531e-05 1.081551e-05
+ENSG00000000460 2.907263e-06 2.924057e-06 1.577993e-06 2.308187e-06
+ENSG00000000971 1.575252e-04 1.955929e-04 2.436816e-04 2.804118e-04
+                  SRR1039516
+ENSG00000000003 4.654700e-05
+ENSG00000000419 2.400974e-05
+ENSG00000000457 1.002110e-05
+ENSG00000000460 3.190392e-06
+ENSG00000000971 2.749054e-04</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb82"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a><span class="co"># counts per million reads mapped</span></span>
+<span id="cb82-2"><a href="#cb82-2" aria-hidden="true" tabindex="-1"></a><span class="fu">assay</span>(se.sub) <span class="ot">&lt;-</span> <span class="fu">assay</span>(se.sub) <span class="sc">*</span> <span class="dv">10</span><span class="sc">^</span><span class="dv">6</span></span>
+<span id="cb82-3"><a href="#cb82-3" aria-hidden="true" tabindex="-1"></a><span class="fu">assay</span>(se.sub)[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>,<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                SRR1039508 SRR1039509 SRR1039512 SRR1039513 SRR1039516
+ENSG00000000003  32.900521  23.817776  34.439705  26.906868  46.546998
+ENSG00000000419  22.628193  27.379809  24.498347  24.071095  24.009743
+ENSG00000000457  12.598138  11.217747  10.375306  10.815506  10.021102
+ENSG00000000460   2.907263   2.924057   1.577993   2.308187   3.190392
+ENSG00000000971 157.525175 195.592850 243.681626 280.411767 274.905425</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a>ind <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(<span class="fu">assay</span>(se)) <span class="sc">&gt;=</span> <span class="dv">8</span></span>
+<span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a>se.sub <span class="ot">&lt;-</span> se[ind,]</span>
+<span id="cb84-3"><a href="#cb84-3" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(se.sub)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 23171</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="differential-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="differential-analysis">Differential Analysis</h2>
+<p>A basic task in the analysis of RNA-seq count data is the detection of differentially expressed genes. The count data are presented as a table which reports, for each sample, the number of sequence fragments that have been assigned to each gene. An important analysis question is the quantification and statistical inference of systematic changes between conditions, as compared to within-condition variability.</p>
+<p>We start by loading the <a href="https://bioconductor.org/packages/DESeq2">DESeq2</a> package, a very popular method for analysing differential expression of bulk RNA-seq data.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb86"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"DESeq2"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><a href="https://bioconductor.org/packages/DESeq2">DESeq2</a> requires count data like that in the <code>SummarizedExperiment</code> we have been working with.</p>
+<p>The <a href="https://bioconductor.org/packages/airway">airway</a> experimental data package contains an example dataset from an RNA-Seq experiment of read counts per gene for airway smooth muscles. These data are stored in a <code>RangedSummarizedExperiment</code> object which contains 8 different experimental samples and assays 64,102 gene transcripts.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb87"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(airway)</span>
+<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(airway)</span>
+<span id="cb87-3"><a href="#cb87-3" aria-hidden="true" tabindex="-1"></a>se <span class="ot">&lt;-</span> airway</span>
+<span id="cb87-4"><a href="#cb87-4" aria-hidden="true" tabindex="-1"></a>se</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>class: RangedSummarizedExperiment 
+dim: 63677 8 
+metadata(1): ''
+assays(1): counts
+rownames(63677): ENSG00000000003 ENSG00000000005 ... ENSG00000273492
+  ENSG00000273493
+rowData names(10): gene_id gene_name ... seq_coord_system symbol
+colnames(8): SRR1039508 SRR1039509 ... SRR1039520 SRR1039521
+colData names(9): SampleName cell ... Sample BioSample</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rowRanges</span>(se)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>GRangesList object of length 63677:
+$ENSG00000000003
+GRanges object with 17 ranges and 2 metadata columns:
+       seqnames            ranges strand |   exon_id       exon_name
+          &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;     &lt;character&gt;
+   [1]        X 99883667-99884983      - |    667145 ENSE00001459322
+   [2]        X 99885756-99885863      - |    667146 ENSE00000868868
+   [3]        X 99887482-99887565      - |    667147 ENSE00000401072
+   [4]        X 99887538-99887565      - |    667148 ENSE00001849132
+   [5]        X 99888402-99888536      - |    667149 ENSE00003554016
+   ...      ...               ...    ... .       ...             ...
+  [13]        X 99890555-99890743      - |    667156 ENSE00003512331
+  [14]        X 99891188-99891686      - |    667158 ENSE00001886883
+  [15]        X 99891605-99891803      - |    667159 ENSE00001855382
+  [16]        X 99891790-99892101      - |    667160 ENSE00001863395
+  [17]        X 99894942-99894988      - |    667161 ENSE00001828996
+  -------
+  seqinfo: 722 sequences (1 circular) from an unspecified genome
+
+...
+&lt;63676 more elements&gt;</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb91"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colData</span>(se)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>DataFrame with 8 rows and 9 columns
+           SampleName     cell      dex    albut        Run avgLength
+             &lt;factor&gt; &lt;factor&gt; &lt;factor&gt; &lt;factor&gt;   &lt;factor&gt; &lt;integer&gt;
+SRR1039508 GSM1275862  N61311     untrt    untrt SRR1039508       126
+SRR1039509 GSM1275863  N61311     trt      untrt SRR1039509       126
+SRR1039512 GSM1275866  N052611    untrt    untrt SRR1039512       126
+SRR1039513 GSM1275867  N052611    trt      untrt SRR1039513        87
+SRR1039516 GSM1275870  N080611    untrt    untrt SRR1039516       120
+SRR1039517 GSM1275871  N080611    trt      untrt SRR1039517       126
+SRR1039520 GSM1275874  N061011    untrt    untrt SRR1039520       101
+SRR1039521 GSM1275875  N061011    trt      untrt SRR1039521        98
+           Experiment    Sample    BioSample
+             &lt;factor&gt;  &lt;factor&gt;     &lt;factor&gt;
+SRR1039508  SRX384345 SRS508568 SAMN02422669
+SRR1039509  SRX384346 SRS508567 SAMN02422675
+SRR1039512  SRX384349 SRS508571 SAMN02422678
+SRR1039513  SRX384350 SRS508572 SAMN02422670
+SRR1039516  SRX384353 SRS508575 SAMN02422682
+SRR1039517  SRX384354 SRS508576 SAMN02422673
+SRR1039520  SRX384357 SRS508579 SAMN02422683
+SRR1039521  SRX384358 SRS508580 SAMN02422677</code></pre>
+</div>
+</div>
+<p>The package requires count data like that in the <code>SummarizedExperiment</code> we have been working with, in addition to a <code>formula</code> describing the experimental design. We use the cell line as a covariate, and dexamethazone treatment as the main factor that we are interested in.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb93"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a>dds <span class="ot">&lt;-</span> <span class="fu">DESeqDataSet</span>(se, <span class="at">design =</span> <span class="sc">~</span> cell <span class="sc">+</span> dex)</span>
+<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a>dds</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>class: DESeqDataSet 
+dim: 63677 8 
+metadata(2): '' version
+assays(1): counts
+rownames(63677): ENSG00000000003 ENSG00000000005 ... ENSG00000273492
+  ENSG00000273493
+rowData names(10): gene_id gene_name ... seq_coord_system symbol
+colnames(8): SRR1039508 SRR1039509 ... SRR1039520 SRR1039521
+colData names(9): SampleName cell ... Sample BioSample</code></pre>
+</div>
+</div>
+<p>The <code>dds</code> object can be manipulated very much like a <code>SummarizedExperiment</code> (in fact: it <em>is</em> a <code>SummarizedExperiment</code>).</p>
+<p>There are two reasons which make pre-filtering useful: by removing genes with only few reads across samples, we reduce the size of the <code>dds</code> data object, and thus increase the speed of the transformation and testing functions within DESeq2.</p>
+<p>Here we perform a minimal pre-filtering to keep only rows that have at least 10 reads total.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb95"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a>keep <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(<span class="fu">counts</span>(dds)) <span class="sc">&gt;=</span> <span class="dv">10</span></span>
+<span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(keep)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>keep
+FALSE  TRUE 
+41308 22369 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb97"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a>dds <span class="ot">&lt;-</span> dds[keep,]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The DESeq workflow is summarized by a single function call, which performs statistical analysis on the data in the <code>dds</code> object.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb98"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a>dds <span class="ot">&lt;-</span> <span class="fu">DESeq</span>(dds)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>estimating size factors</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>estimating dispersions</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>gene-wise dispersion estimates</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>mean-dispersion relationship</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>final dispersion estimates</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>fitting model and testing</code></pre>
+</div>
+</div>
+<p>A table summarizing measures of differential expression can be extracted from the object, and visualized or manipulated using commands we learned earlier.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb105"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb105-1"><a href="#cb105-1" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">results</span>(dds)</span>
+<span id="cb105-2"><a href="#cb105-2" aria-hidden="true" tabindex="-1"></a>res</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>log2 fold change (MLE): dex untrt vs trt 
+Wald test p-value: dex untrt vs trt 
+DataFrame with 22369 rows and 6 columns
+                 baseMean log2FoldChange     lfcSE       stat      pvalue
+                &lt;numeric&gt;      &lt;numeric&gt; &lt;numeric&gt;  &lt;numeric&gt;   &lt;numeric&gt;
+ENSG00000000003  708.5979      0.3812272 0.1007023   3.785685 1.53286e-04
+ENSG00000000419  520.2963     -0.2068403 0.1121077  -1.845013 6.50356e-02
+ENSG00000000457  237.1621     -0.0379542 0.1428231  -0.265743 7.90437e-01
+ENSG00000000460   57.9324      0.0885314 0.2849344   0.310708 7.56023e-01
+ENSG00000000971 5817.3108     -0.4264245 0.0888056  -4.801774 1.57267e-06
+...                   ...            ...       ...        ...         ...
+ENSG00000273483   2.68955      -0.849208  1.253365 -0.6775424    0.498062
+ENSG00000273485   1.28646       0.123614  1.588250  0.0778301    0.937963
+ENSG00000273486  15.45244       0.150430  0.482098  0.3120312    0.755017
+ENSG00000273487   8.16327      -1.045638  0.693057 -1.5087328    0.131367
+ENSG00000273488   8.58437      -0.108945  0.632300 -0.1722990    0.863203
+                       padj
+                  &lt;numeric&gt;
+ENSG00000000003 1.28920e-03
+ENSG00000000419 1.94929e-01
+ENSG00000000457 9.09901e-01
+ENSG00000000460 8.92994e-01
+ENSG00000000971 2.06392e-05
+...                     ...
+ENSG00000273483          NA
+ENSG00000273485          NA
+ENSG00000273486    0.892518
+ENSG00000273487    0.323299
+ENSG00000273488    0.943414</code></pre>
+</div>
+</div>
+<p><strong>Task</strong>:</p>
+<p>Use the <code>contrast</code> argument of the <code>results</code> function to compare <code>trt</code> vs.&nbsp;<code>untrt</code> groups instead of <code>untrt</code> vs.&nbsp;<code>trt</code> (changes the direction of the fold change).</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Solution
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb107"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a>res_trt_untrt <span class="ot">&lt;-</span> <span class="fu">results</span>(dds, <span class="at">contrast =</span> <span class="fu">c</span>(<span class="st">"dex"</span>,<span class="st">"trt"</span>,<span class="st">"untrt"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="volcano-plot" class="level2">
+<h2 class="anchored" data-anchor-id="volcano-plot">Volcano plot</h2>
+<p>A useful illustration of differential expression results is to plot the fold change against the <em>p</em>-value in a volcano plot. This allows to inspect direction and magnitude (fold change) as well as the statistical significance (<em>p</em>-value) of the expression change.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb108"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb108-2"><a href="#cb108-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">as.data.frame</span>(res), </span>
+<span id="cb108-3"><a href="#cb108-3" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x =</span> log2FoldChange, <span class="at">y =</span> <span class="sc">-</span><span class="fu">log10</span>(padj))) <span class="sc">+</span> </span>
+<span id="cb108-4"><a href="#cb108-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb108-5"><a href="#cb108-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="sc">-</span><span class="fu">log10</span>(<span class="fl">0.05</span>), <span class="at">col =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb108-6"><a href="#cb108-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="sc">-</span><span class="dv">1</span>, <span class="at">col =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb108-7"><a href="#cb108-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">1</span>, <span class="at">col =</span> <span class="st">"red"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 4337 rows containing missing values (`geom_point()`).</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="session4_files/figure-html/unnamed-chunk-40-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="ma-plot" class="level2">
+<h2 class="anchored" data-anchor-id="ma-plot">MA plot</h2>
+<p>Another useful illustration of differential expression results is to plot the fold changes as a function of the mean of the expression level (normalized counts) across samples in an MA plot.</p>
+<p>Points will be colored if the adjusted <em>p</em>-value is less than a defined significance threshold (default: 0.1). Points which fall out of the window are plotted as open triangles pointing either up or down.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb110"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plotMA</span>(res)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="session4_files/figure-html/unnamed-chunk-41-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>The <a href="https://bioconductor.org/packages/DESeq2">DESeq2</a> vignette also describes several other useful result exploration and data quality assessment plots.</p>
+<p><strong>Exercises</strong></p>
+<div class="callout callout-style-simple callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Basic
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li><p>Use the <code>coef</code> function to examine the actual coefficients of the model.</p></li>
+<li><p>Get the number of genes considered significantly expressed at the alpha level of 0.1 (for the adjusted p value).</p></li>
+<li><p>Now see how many genes would be considered differentially expressed at an alpha level of 0.05 and a log2 fold change cutoff of at least 1. <strong>Note</strong>: Take a look again at the arguments of the <code>results</code> function. Are there any you should change?</p></li>
+</ol>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Solution
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb111"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a><span class="co">#1.  Use the `coef` function to examine the actual coefficients of the model.</span></span>
+<span id="cb111-2"><a href="#cb111-2" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(dds)</span>
+<span id="cb111-3"><a href="#cb111-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb111-4"><a href="#cb111-4" aria-hidden="true" tabindex="-1"></a><span class="co">#2.  </span></span>
+<span id="cb111-5"><a href="#cb111-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(res<span class="sc">$</span>padj<span class="sc">&lt;</span><span class="fl">0.1</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb111-6"><a href="#cb111-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb111-7"><a href="#cb111-7" aria-hidden="true" tabindex="-1"></a><span class="co">#3. </span></span>
+<span id="cb111-8"><a href="#cb111-8" aria-hidden="true" tabindex="-1"></a>res_05_1 <span class="ot">&lt;-</span> <span class="fu">results</span>(dds, <span class="at">alpha=</span><span class="fl">0.05</span>,<span class="at">lfcThreshold =</span> <span class="dv">1</span>)</span>
+<span id="cb111-9"><a href="#cb111-9" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>((res_05_1<span class="sc">$</span>padj<span class="sc">&lt;</span><span class="fl">0.1</span>)<span class="sc">&amp;</span>(res_05_1<span class="sc">$</span>log2FoldChange<span class="sc">&gt;=</span><span class="dv">1</span>), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-caution no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Advanced
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Let’s imagine that, instead of all being untreated, half of the samples had been treated with albuterol:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb112"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a>fake_se <span class="ot">&lt;-</span> se</span>
+<span id="cb112-2"><a href="#cb112-2" aria-hidden="true" tabindex="-1"></a><span class="co">#Currently the factor only has the untrt level, so we need to add another</span></span>
+<span id="cb112-3"><a href="#cb112-3" aria-hidden="true" tabindex="-1"></a><span class="fu">levels</span>(<span class="fu">colData</span>(fake_se)<span class="sc">$</span>albut) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">levels</span>(<span class="fu">colData</span>(fake_se)<span class="sc">$</span>albut), <span class="st">"trt"</span>)</span>
+<span id="cb112-4"><a href="#cb112-4" aria-hidden="true" tabindex="-1"></a><span class="fu">colData</span>(fake_se)<span class="sc">$</span>albut[<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">8</span>)] <span class="ot">&lt;-</span> <span class="st">"trt"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Remake the <code>dds</code> object such that the <code>albut</code> column is an additional covartiate in the experimental design.</p>
+<p>If there is time, compare the number of significant results (for comparing <code>cell</code> and <code>dex</code>) when <code>albut</code> is and is not accounted for. Does it make a difference?</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Solution
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb113"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb113-1"><a href="#cb113-1" aria-hidden="true" tabindex="-1"></a>dds_fake <span class="ot">&lt;-</span> <span class="fu">DESeqDataSet</span>(fake_se, <span class="at">design =</span> <span class="sc">~</span> albut <span class="sc">+</span> cell <span class="sc">+</span> dex)</span>
+<span id="cb113-2"><a href="#cb113-2" aria-hidden="true" tabindex="-1"></a>keep <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(<span class="fu">counts</span>(dds_fake)) <span class="sc">&gt;=</span> <span class="dv">4</span></span>
+<span id="cb113-3"><a href="#cb113-3" aria-hidden="true" tabindex="-1"></a>dds_fake <span class="ot">&lt;-</span> dds_fake[keep,]</span>
+<span id="cb113-4"><a href="#cb113-4" aria-hidden="true" tabindex="-1"></a>dds_fake <span class="ot">&lt;-</span> <span class="fu">DESeq</span>(dds_fake)</span>
+<span id="cb113-5"><a href="#cb113-5" aria-hidden="true" tabindex="-1"></a>res_fake <span class="ot">&lt;-</span> <span class="fu">results</span>(dds_fake)</span>
+<span id="cb113-6"><a href="#cb113-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb113-7"><a href="#cb113-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(res<span class="sc">$</span>padj<span class="sc">&lt;</span><span class="fl">0.1</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb113-8"><a href="#cb113-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(res_fake<span class="sc">$</span>padj<span class="sc">&lt;</span><span class="fl">0.1</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

@@ -1,0 +1,551 @@
+---
+title: "Session 1: Review"
+format: html
+---
+
+# Data
+
+# Welcome back to R
+
+## Notebooks
+
+Recall that a **code notebook** is a document which typically consists of different **chunks**. Each chunk is either code or text. There are a variety of different notebook platforms for different languages, such as Jupyter notebooks in Python. In R, notebooks have historically been written using R Markdown. However, recently Quarto has been created by Posit (the organization behind RStudio) as an updated version of R Markdown.
+
+R Markdown/Quarto notebooks can be *rendered* do different formats such as html (a webpage viewable in your web browser), pdf, Word, powerpoint, and others. Their power lies in their ability to make code an output document. We can write our report in the same document we actually perform the analysis, integrating the two together.
+
+Quarto and R Markdown syntax are almost identical. We will mainly be using Quarto in this course. For those familiar with R Markdown, you can find a rundown of changes [here](https://quarto.org/docs/faq/rmarkdown.html).
+
+Markdown is a language used to quickly create formatted text. It's great to know as it is used in R Markdown, Quarto, Jupyter, Github documents, and many other places. A pure markdown file has a `.md` file extension.
+
+You can find a quick [guide to markdown here](https://quarto.org/docs/authoring/markdown-basics.html), throughout the course we will see various things markdown can do in the readings and in-class materials.
+
+Due to Quarto being written as an evolution of R Markdown, it also supports most R Markdown syntax. While we could technically mix and match different types of syntax in a single document, this is bad practice. **Readable code is consistent**. Even if there are multiple ways to do something, it's best to choose one way and stick with it throughout a code or document. For an example of how passionate programmers can get about consistencies in their code, check out the [wikipedia article on indentation style](https://en.wikipedia.org/wiki/Indentation_style).
+
+## Packages
+
+R packages play a fundamental role in R. The make use of a package’s functionality, assuming it is installed, we first need to load it to be able to use it. This is done with the `library()` function. Below, we load `ggplot2`.
+
+```{r}
+library(ggplot2)
+```
+
+
+The default package repository is The *Comprehensive R Archive Network* (CRAN), and any package that is available on CRAN can be installed with the `install.packages()` function. Below, for example, we install the `dplyr` package.
+
+```{r, eval=FALSE}
+install.packages("dplyr")
+```
+Another major R package repository is maintained by Bioconductor. Bioconductor packages are managed and installed using a dedicated package, namely `BiocManager`, that can be installed from CRAN with
+
+```{r, eval=FALSE}
+install.packages("BiocManager")
+```
+
+Individual packages such as `SummarizedExperiment` (we will use it later), `DESeq2` (for RNA-Seq analysis), and any others from either Bioconductor or CRAN can then be installed with `BiocManager::install`.
+
+```{r, eval=FALSE}
+BiocManager::install("SummarizedExperiment")
+BiocManager::install("DESeq2")
+```
+
+
+## Finding help
+
+See the getting help document in resources for more information on getting help with R. 
+
+If you need help with a specific function, let's say `barplot()`, you
+can type:
+
+```{r, eval=FALSE, purl=TRUE}
+?barplot
+```
+
+If you just need to remind yourself of the names of the arguments, you can use:
+
+```{r, eval=FALSE, purl=TRUE}
+args(lm)
+```
+
+# Exercises
+
+We need to load in some libraries. 
+
+```{r, message=FALSE, purl=TRUE}
+## load the tidyverse packages, incl. dplyr
+library(tidyverse)
+library(DT)
+```
+
+And then load our data. 
+
+```{r}
+rna <- read_csv("../data/rnaseq.csv")
+
+## view the data
+datatable(head(rna,20))
+```
+
+::: {.callout-note icon=false}
+
+## Challenge:
+
+Using pipes, subset the `rna` data to keep observations in female mice at time 0,
+where the gene has an expression higher than 50000, and retain only the columns
+`gene`, `sample`, `time`, `expression` and `age`.
+
+:::
+
+::: {.callout-tip icon=false collapse=true}
+
+## Solution
+
+```{r}
+rna %>%
+  filter(expression > 50000,
+         sex == "Female",
+         time == 0 ) %>%
+  select(gene, sample, time, expression, age)
+```
+
+:::
+
+::: {.callout-note icon=false}
+
+## Challenge
+
+Create a new data frame from the `rna` data that meets the following
+criteria: contains only the `gene`, `chromosome_name`,
+`phenotype_description`, `sample`, and `expression` columns. The expression
+values should be log-transformed. This data frame must
+only contain genes located on sex chromosomes, associated with a
+phenotype\_description, and with a log expression higher than 5.
+
+**Hint**: think about how the commands should be ordered to produce
+this data frame!
+
+:::
+
+::: {.callout-tip icon=false collapse=true}
+
+## Solution
+
+```{r, eval=TRUE, purl=TRUE}
+rna %>%
+  mutate(expression = log(expression)) %>%
+  select(gene, chromosome_name, phenotype_description, sample, expression) %>%
+  filter(chromosome_name == "X" | chromosome_name == "Y") %>%
+  filter(!is.na(phenotype_description)) %>%
+  filter(expression > 5)
+```
+:::
+
+::: {.callout-note icon=false}
+
+## Challenge
+
+Calculate the mean expression level of gene "Dok3" by timepoints.
+
+:::
+
+
+::: {.callout-tip icon=false collapse=true}
+
+## Solution
+
+```{r, purl=TRUE}
+rna %>%
+  filter(gene == "Dok3") %>%
+  group_by(time) %>%
+  summarise(mean = mean(expression))
+```
+
+:::
+
+::: {.callout-note icon=false}
+
+## Challenge
+
+1. How many genes were analysed in each sample?
+2. Use `group_by()` and `summarise()` to evaluate the sequencing depth (the sum of all counts) in each sample. Which sample has the highest sequencing depth?
+3. Pick one sample and evaluate the number of genes by biotype.
+4. Identify genes associated with the "abnormal DNA methylation" phenotype description, and calculate their mean expression (in log) at time 0, time 4 and time 8.
+
+:::
+
+::: {.callout-tip icon=false collapse=true}
+
+## Solution
+
+```{r}
+## 1.
+rna %>%
+  count(sample)
+## 2.
+rna %>%
+  group_by(sample) %>%
+  summarise(seq_depth = sum(expression)) %>%
+  arrange(desc(seq_depth))
+## 3.
+rna %>%
+  filter(sample == "GSM2545336") %>%
+  group_by(gene_biotype) %>%
+  count(gene_biotype) %>%
+  arrange(desc(n))
+## 4.
+rna %>%
+  filter(phenotype_description == "abnormal DNA methylation") %>%
+  group_by(gene, time) %>%
+  summarise(mean_expression = mean(log(expression))) %>%
+  arrange()
+```
+:::
+
+
+# Review: Tidyverse
+
+## Selecting and filtering
+
+To select columns of a data frame, use `select()`. The first argument
+to this function is the data frame (`rna`), and the subsequent
+arguments are the columns to keep.
+
+```{r, purl=TRUE}
+select(rna, gene, sample, tissue, expression)
+```
+
+To select all columns *except* certain ones, put a "-" in front of
+the variable to exclude it.
+
+```{r, purl=TRUE}
+select(rna, -tissue, -organism)
+```
+
+This will select all the variables in `rna` except `tissue`
+and `organism`.
+
+To choose rows based on a specific criteria, use `filter()`:
+
+```{r, purl=TRUE}
+filter(rna, sex == "Male")
+filter(rna, sex == "Male" & infection == "NonInfected")
+```
+
+Now let's imagine we are interested in the human homologs of the mouse
+genes analysed in this dataset. This information can be found in the
+last column of the `rna` tibble, named
+`hsapiens_homolog_associated_gene_name`.  To visualise it easily, we
+will create a new table containing just the 2 columns `gene` and
+`hsapiens_homolog_associated_gene_name`.
+
+```{r}
+genes <- select(rna, gene, hsapiens_homolog_associated_gene_name)
+genes
+```
+
+The pipe `%>%` takes the object on its left and passes it directly as
+the first argument to the function on its right, we don't need to
+explicitly include the data frame as an argument to the `filter()` and
+`select()` functions any more.
+
+```{r, purl=TRUE}
+rna %>%
+  filter(sex == "Male") %>%
+  select(gene, sample, tissue, expression)
+```
+
+## Mutate
+
+Frequently you'll want to create new columns based on the values of existing
+columns, for example to do unit conversions, or to find the ratio of values in two
+columns. For this we'll use `mutate()`.
+
+To create a new column of time in hours:
+
+```{r, purl=TRUE}
+rna %>%
+  mutate(time_hours = time * 24) %>%
+  select(time, time_hours)
+```
+
+You can also create a second new column based on the first new column within the same call of `mutate()`:
+
+```{r, purl=TRUE}
+rna %>%
+  mutate(time_hours = time * 24,
+         time_mn = time_hours * 60) %>%
+  select(time, time_hours, time_mn)
+```
+
+# Review: ggplot2
+
+For this section, you will need the \`new_metadata\` data frame. Load it into your environment as follows:
+
+```{r}
+## load the new_metadata data frame into your environment from a .RData object
+load("../data/new_metadata.RData")
+```
+
+
+```{r}
+ggplot(new_metadata) # what happens? 
+```
+
+You get an blank plot, because you need to **specify additional layers** using the `+` operator.
+
+The **geom (geometric) object** is the layer that specifies what kind of plot we want to draw. A plot **must have at least one `geom`** ; there is no upper limit. Examples include:
+
+\- points (`geom_point`, `geom_jitter` for scatter plots, dot plots, etc)
+
+\- lines (`geom_line`, for time series, trend lines, etc)
+
+\- boxplot (`geom_boxplot`, for, well, boxplots!)
+
+Let's add a "`geom`" layer to our plot using the `+` operator, and since we want a scatter plot so we will use `geom_point()`.
+
+```{r}
+#ggplot(new_metadata) +
+ # geom_point() # note what happens here
+```
+
+Why do we get an error? Is the error message easy to decipher?
+
+We get an error because each type of `geom` usually has a **required set of aesthetics** to be set. "**Aesthetics**" are set with the `aes()` function and can be set either nested within `geom_point()` (applies only to that layer) or within `ggplot()` (applies to the whole plot).
+
+The `aes()` function has many different arguments, and all of those arguments take columns from the original data frame as input. It can be used to specify many plot elements including the following:
+
+\- position (i.e., on the x and y axes)
+
+\- color ("outside" color)
+
+\- fill ("inside" color)
+
+\- shape (of points)
+
+\- linetype
+
+\- size
+
+To start, we will specify x- and y-axis since `geom_point` requires the most basic information about a scatterplot, i.e. what you want to plot on the x and y axes. All of the other plot elements mentioned above are optional.
+
+```{r}
+ggplot(new_metadata) +
+     geom_point(aes(x = age_in_days, y= samplemeans))
+```
+
+Now that we have the required aesthetics, let's add some extras like color to the plot. We can **`color`** the points on the plot based on the genotype column\*\* within `aes()`. You will notice that there are a default set of colors that will be used so we do not have to specify. Note that the legend has been conveniently plotted for us.
+
+```{r}
+ggplot(new_metadata) +
+  geom_point(aes(x = age_in_days, y= samplemeans, color = genotype)) 
+```
+
+Let's try to have both **celltype and genotype represented on the plot**. To do this we can assign the `shape` argument in `aes()` the celltype column, so that each celltype is plotted with a different shaped data point.
+
+```{r}
+ggplot(new_metadata) +
+  geom_point(aes(x = age_in_days, y= samplemeans, color = genotype,
+            shape=celltype)) 
+```
+
+The data points are quite small. We can adjust the **size of the data points** within the `geom_point()` layer, but it should **not be within `aes()`** since we are not mapping it to a column in the input data frame, instead we are just specifying a number.
+
+```{r}
+ggplot(new_metadata) +
+  geom_point(aes(x = age_in_days, y= samplemeans, color = genotype,
+            shape=celltype), size=2.25) 
+```
+
+The labels on the x- and y-axis are also quite small and hard to read. To change their size, we need to add an additional **theme layer**. The ggplot2 `theme` system handles non-data plot elements such as:
+
+\- Axis label aesthetics
+
+\- Plot background
+
+\- Facet label background
+
+\- Legend appearance
+
+There are built-in themes we can use (i.e. `theme_bw()`) that mostly change the background/foreground colors, by adding it as additional layer. Or we can adjust specific elements of the current default theme by adding the `theme()` layer and passing in arguments for the things we wish to change. Or we can use both.
+
+Let's add a layer `theme_bw()`.
+
+```{r}
+ggplot(new_metadata) +
+  geom_point(aes(x = age_in_days, y= samplemeans, color = genotype,
+            shape=celltype), size=3.0) +
+  theme_bw() 
+```
+
+Do the axis labels or the tick labels get any larger by changing themes?
+
+No, they don't. But, we can add arguments using `theme()` to change the size of axis labels ourselves. Since we will be adding this layer "on top", or after `theme_bw()`, any features we change will override what is set by the `theme_bw()` layer.
+
+Let's **increase the size of both the axes titles to be 1.5 times the default size.** When modifying the size of text the `rel()` function is commonly used to specify a change relative to the default.
+
+```{r}
+ggplot(new_metadata) +
+  geom_point(aes(x = age_in_days, y= samplemeans, color = genotype,
+            shape=celltype), size=2.25) +
+  theme_bw() +
+  theme(axis.title = element_text(size=rel(1.5))) 
+```
+
+## Histograms
+
+To plot a histogram we require another type of geometric object called `geom_histogram`, which requires a statistical transformation. Some plot types (such as scatterplots) do not require transformations, each point is plotted at x and y coordinates equal to the original value. Other plots, such as boxplots, histograms, prediction lines etc. need to be transformed. Usually these objects have has a default statistic for the transformation, but that can be changed via the `stat_bin` argument.
+
+Let's plot a histogram of sample mean expression in our data:
+
+```{r}
+ggplot(new_metadata) +
+  geom_histogram(aes(x = samplemeans))
+```
+
+You will notice that even though the histogram is plotted, R gives a warning message `stat_bin()` using `bins = 30`. Pick better value with `binwidth`. These are the transformations we discussed. Apparently the default is not good enough.
+
+Let's change the `binwidth` values. How does the plot differ?
+
+```{r}
+ggplot(new_metadata) +
+  geom_histogram(aes(x = samplemeans), stat = "bin", binwidth=0.8)
+```
+
+# Review: Split-apply-combine
+
+Many data analysis tasks can be approached using the
+*split-apply-combine* paradigm: split the data into groups, apply some
+analysis to each group, and then combine the results. **`dplyr`**
+makes this very easy through the use of the `group_by()` function.
+
+```{r}
+rna %>%
+  group_by(gene)
+```
+
+The `group_by()` function doesn't perform any data processing, it
+groups the data into subsets: in the example above, our initial
+`tibble` of `r nrow(rna)` observations is split into
+`r length(unique(rna$gene))` groups based on the `gene` variable.
+
+We could similarly decide to group the tibble by the samples:
+
+```{r}
+rna %>%
+  group_by(sample)
+```
+
+Here our initial `tibble` of `r nrow(rna)` observations is split into
+`r length(unique(rna$sample))` groups based on the `sample` variable.
+
+Once the data has been grouped, subsequent operations will be
+applied on each group independently.
+
+### The `summarise()` function
+
+`group_by()` is often used together with `summarise()`, which
+collapses each group into a single-row summary of that group.
+
+`group_by()` takes as arguments the column names that contain the
+**categorical** variables for which you want to calculate the summary
+statistics. So to compute the mean `expression` by gene:
+
+```{r}
+rna %>%
+  group_by(gene) %>%
+  summarise(mean_expression = mean(expression))
+```
+
+We could also want to calculate the mean expression levels of all genes in each sample:
+
+```{r}
+rna %>%
+  group_by(sample) %>%
+  summarise(mean_expression = mean(expression))
+```
+
+But we can can also group by multiple columns:
+
+```{r}
+rna %>%
+  group_by(gene, infection, time) %>%
+  summarise(mean_expression = mean(expression))
+```
+
+Once the data is grouped, you can also summarise multiple variables at the same
+time (and not necessarily on the same variable). For instance, we could add a
+column indicating the median `expression` by gene and by condition:
+
+```{r, purl=TRUE}
+rna %>%
+  group_by(gene, infection, time) %>%
+  summarise(mean_expression = mean(expression),
+            median_expression = median(expression))
+```
+
+### Counting
+
+When working with data, we often want to know the number of observations found
+for each factor or combination of factors. For this task, **`dplyr`** provides
+`count()`. For example, if we wanted to count the number of rows of data for
+each infected and non-infected samples, we would do:
+
+```{r, purl=TRUE}
+rna %>%
+    count(infection)
+```
+
+The `count()` function is shorthand for something we've already seen: grouping by a variable, and summarising it by counting the number of observations in that group. In other words, `rna %>% count(infection)` is equivalent to:
+
+```{r, purl=TRUE}
+rna %>%
+    group_by(infection) %>%
+    summarise(n = n())
+```
+
+The previous example shows the use of `count()` to count the number of rows/observations
+for *one* factor (i.e., `infection`).
+If we wanted to count a *combination of factors*, such as `infection` and `time`,
+we would specify the first and the second factor as the arguments of `count()`:
+
+```{r, purl=TRUE}
+rna %>%
+    count(infection, time)
+```
+
+which is equivalent to this:
+
+```{r, purl=TRUE}
+rna %>%
+  group_by(infection, time) %>%
+  summarise(n = n())
+```
+
+It is sometimes useful to sort the result to facilitate the comparisons.
+We can use `arrange()` to sort the table.
+For instance, we might want to arrange the table above by time:
+
+```{r, purl=TRUE}
+rna %>%
+  count(infection, time) %>%
+  arrange(time)
+```
+
+or by counts:
+
+```{r, purl=TRUE}
+rna %>%
+  count(infection, time) %>%
+  arrange(n)
+```
+
+To sort in descending order, we need to add the `desc()` function:
+
+```{r, purl=TRUE}
+rna %>%
+  count(infection, time) %>%
+  arrange(desc(n))
+```
+
+------------------------------------------------------------------------
+
+*The materials in this lesson have been adapted from work created by the [HBC](http://bioinformatics.sph.harvard.edu/) and [Data Carpentry](http://datacarpentry.org/), as well as materials created by Laurent Gatto, Charlotte Soneson, Jenny Drnevich, Robert Castelo, and Kevin Rue-Albert. These are open access materials distributed under the terms of the [Creative Commons Attribution license](https://creativecommons.org/licenses/by/4.0/) (CC BY 4.0), which permits unrestricted use, distribution, and reproduction in any medium, provided the original author and source are credited.*

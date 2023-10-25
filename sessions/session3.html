@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.433">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Session 3: Modeling</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="session3_files/libs/clipboard/clipboard.min.js"></script>
+<script src="session3_files/libs/quarto-html/quarto.js"></script>
+<script src="session3_files/libs/quarto-html/popper.min.js"></script>
+<script src="session3_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="session3_files/libs/quarto-html/anchor.min.js"></script>
+<link href="session3_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="session3_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="session3_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="session3_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="session3_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Session 3: Modeling</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="data" class="level1">
+<h1>Data</h1>
+</section>
+<section id="review-modeling" class="level1">
+<h1>Review: Modeling</h1>
+<section id="single-and-multiple-regression" class="level2">
+<h2 class="anchored" data-anchor-id="single-and-multiple-regression">Single and multiple regression</h2>
+<p>R uses the function <code>lm</code> to fit linear models.</p>
+<p>Read in ’lm_example_data.csv`:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2018-September-Bioinformatics-Prerequisites/master/friday/lm_example_data.csv"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(dat)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  sample expression  batch treatment  time temperature
+1      1  1.2139625 Batch1         A time1    11.76575
+2      2  1.4796581 Batch1         A time2    12.16330
+3      3  1.0878287 Batch1         A time1    10.54195
+4      4  1.4438585 Batch1         A time2    10.07642
+5      5  0.6371621 Batch1         A time1    12.03721
+6      6  2.1226740 Batch1         B time2    13.49573</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(dat)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>'data.frame':   25 obs. of  6 variables:
+ $ sample     : int  1 2 3 4 5 6 7 8 9 10 ...
+ $ expression : num  1.214 1.48 1.088 1.444 0.637 ...
+ $ batch      : chr  "Batch1" "Batch1" "Batch1" "Batch1" ...
+ $ treatment  : chr  "A" "A" "A" "A" ...
+ $ time       : chr  "time1" "time2" "time1" "time2" ...
+ $ temperature: num  11.8 12.2 10.5 10.1 12 ...</code></pre>
+</div>
+</div>
+<p>Fit a linear model using <code>expression</code> as the outcome and <code>treatment</code> as a categorical covariate. In R model syntax, the outcome is on the left side, with covariates (separated by <code>+</code>) following the <code>~</code>:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>oneway.model <span class="ot">&lt;-</span> <span class="fu">lm</span>(expression <span class="sc">~</span> treatment, <span class="at">data =</span> dat)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Note that this the same as the continuous linear model we saw earlier. R notices that <code>treatment</code> is a factor and handles the rest for us.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>oneway.model</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = expression ~ treatment, data = dat)
+
+Coefficients:
+(Intercept)   treatmentB   treatmentC   treatmentD   treatmentE  
+     1.1725       0.4455       0.9028       2.5537       7.4140  </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(oneway.model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "lm"</code></pre>
+</div>
+</div>
+<p>We can look at the design matrix:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>X <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(<span class="sc">~</span>treatment, <span class="at">data =</span> dat)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>X</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   (Intercept) treatmentB treatmentC treatmentD treatmentE
+1            1          0          0          0          0
+2            1          0          0          0          0
+3            1          0          0          0          0
+4            1          0          0          0          0
+5            1          0          0          0          0
+6            1          1          0          0          0
+7            1          1          0          0          0
+8            1          1          0          0          0
+9            1          1          0          0          0
+10           1          1          0          0          0
+11           1          0          1          0          0
+12           1          0          1          0          0
+13           1          0          1          0          0
+14           1          0          1          0          0
+15           1          0          1          0          0
+16           1          0          0          1          0
+17           1          0          0          1          0
+18           1          0          0          1          0
+19           1          0          0          1          0
+20           1          0          0          1          0
+21           1          0          0          0          1
+22           1          0          0          0          1
+23           1          0          0          0          1
+24           1          0          0          0          1
+25           1          0          0          0          1
+attr(,"assign")
+[1] 0 1 1 1 1
+attr(,"contrasts")
+attr(,"contrasts")$treatment
+[1] "contr.treatment"</code></pre>
+</div>
+</div>
+<p>Note that this is a one-way ANOVA model.</p>
+<p><code>summary()</code> applied to an <code>lm</code> object will give p-values and other relevant information:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(oneway.model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = expression ~ treatment, data = dat)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-3.9310 -0.5353  0.1790  0.7725  3.6114 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)   1.1725     0.7783   1.506    0.148    
+treatmentB    0.4455     1.1007   0.405    0.690    
+treatmentC    0.9028     1.1007   0.820    0.422    
+treatmentD    2.5537     1.1007   2.320    0.031 *  
+treatmentE    7.4140     1.1007   6.735 1.49e-06 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 1.74 on 20 degrees of freedom
+Multiple R-squared:  0.7528,    Adjusted R-squared:  0.7033 
+F-statistic: 15.22 on 4 and 20 DF,  p-value: 7.275e-06</code></pre>
+</div>
+</div>
+<p>In the output:</p>
+<ul>
+<li>“Coefficients” refer to the <span class="math inline">\(\beta\)</span>’s</li>
+<li>“Estimate” is the estimate of each coefficient</li>
+<li>“Std. Error” is the standard error of the estimate</li>
+<li>“t value” is the coefficient divided by its standard error</li>
+<li>“Pr(&gt;|t|)” is the p-value for the coefficient</li>
+<li>The residual standard error is the estimate of the variance of <span class="math inline">\(\epsilon\)</span></li>
+<li>Degrees of freedom is the sample size minus # of coefficients estimated</li>
+<li>R-squared is (roughly) the proportion of variance in the outcome explained by the model</li>
+<li>The F-statistic compares the fit of the model <em>as a whole</em> to the null model (with no covariates)</li>
+</ul>
+<p><code>coef()</code> gives you model coefficients:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(oneway.model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>(Intercept)  treatmentB  treatmentC  treatmentD  treatmentE 
+  1.1724940   0.4455249   0.9027755   2.5536669   7.4139642 </code></pre>
+</div>
+</div>
+<p>What do the model coefficients mean?</p>
+<p>By default, R uses reference group coding or “treatment contrasts”. For categorical covariates, the first level alphabetically (or first factor level) is treated as the reference group. The reference group doesn’t get its own coefficient, it is represented by the intercept. Coefficients for other groups are the difference from the reference:</p>
+<p>For our simple design:</p>
+<ul>
+<li><code>(Intercept)</code> is the mean of expression for treatment = A</li>
+<li><code>treatmentB</code> is the mean of expression for treatment = B minus the mean for treatment = A</li>
+<li><code>treatmentC</code> is the mean of expression for treatment = C minus the mean for treatment = A</li>
+<li>etc.</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get means in each treatment</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>treatmentmeans <span class="ot">&lt;-</span> <span class="fu">tapply</span>(dat<span class="sc">$</span>expression, dat<span class="sc">$</span>treatment, mean)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>treatmentmeans[<span class="st">"A"</span>] </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       A 
+1.172494 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Difference in means gives you the "treatmentB" coefficient from oneway.model</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>treatmentmeans[<span class="st">"B"</span>] <span class="sc">-</span> treatmentmeans[<span class="st">"A"</span>] </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        B 
+0.4455249 </code></pre>
+</div>
+</div>
+<p>What if you don’t want reference group coding? Another option is to fit a model without an intercept:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>no.intercept.model <span class="ot">&lt;-</span> <span class="fu">lm</span>(expression <span class="sc">~</span> <span class="dv">0</span> <span class="sc">+</span> treatment, <span class="at">data =</span> dat) <span class="co"># '0' means 'no intercept' here</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(no.intercept.model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = expression ~ 0 + treatment, data = dat)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-3.9310 -0.5353  0.1790  0.7725  3.6114 
+
+Coefficients:
+           Estimate Std. Error t value Pr(&gt;|t|)    
+treatmentA   1.1725     0.7783   1.506 0.147594    
+treatmentB   1.6180     0.7783   2.079 0.050717 .  
+treatmentC   2.0753     0.7783   2.666 0.014831 *  
+treatmentD   3.7262     0.7783   4.787 0.000112 ***
+treatmentE   8.5865     0.7783  11.032 5.92e-10 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 1.74 on 20 degrees of freedom
+Multiple R-squared:  0.8878,    Adjusted R-squared:  0.8598 
+F-statistic: 31.66 on 5 and 20 DF,  p-value: 7.605e-09</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(no.intercept.model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>treatmentA treatmentB treatmentC treatmentD treatmentE 
+  1.172494   1.618019   2.075270   3.726161   8.586458 </code></pre>
+</div>
+</div>
+<p>Without the intercept, the coefficients here estimate the mean in each level of treatment:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>treatmentmeans</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       A        B        C        D        E 
+1.172494 1.618019 2.075270 3.726161 8.586458 </code></pre>
+</div>
+</div>
+<p>The no-intercept model is the SAME model as the reference group coded model, in the sense that it gives the same estimate for any comparison between groups:</p>
+<p>Treatment B - treatment A, reference group coded model:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>coefs <span class="ot">&lt;-</span> <span class="fu">coef</span>(oneway.model)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>coefs[<span class="st">"treatmentB"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>treatmentB 
+ 0.4455249 </code></pre>
+</div>
+</div>
+<p>Treatment B - treatment A, no-intercept model:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>coefs <span class="ot">&lt;-</span> <span class="fu">coef</span>(no.intercept.model)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>coefs[<span class="st">"treatmentB"</span>] <span class="sc">-</span> coefs[<span class="st">"treatmentA"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>treatmentB 
+ 0.4455249 </code></pre>
+</div>
+</div>
+<section id="batch-adjustment" class="level3">
+<h3 class="anchored" data-anchor-id="batch-adjustment">Batch Adjustment</h3>
+<p>Suppose we want to adjust for batch differences in our model. We do this by adding the covariate “batch” to the model formula:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>batch.model <span class="ot">&lt;-</span> <span class="fu">lm</span>(expression <span class="sc">~</span> treatment <span class="sc">+</span> batch, <span class="at">data =</span> dat)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(batch.model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = expression ~ treatment + batch, data = dat)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-3.9310 -0.8337  0.0415  0.7725  3.6114 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)   1.1725     0.7757   1.512 0.147108    
+treatmentB    0.4455     1.0970   0.406 0.689186    
+treatmentC    1.9154     1.4512   1.320 0.202561    
+treatmentD    4.2414     1.9263   2.202 0.040231 *  
+treatmentE    9.1017     1.9263   4.725 0.000147 ***
+batchBatch2  -1.6877     1.5834  -1.066 0.299837    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 1.735 on 19 degrees of freedom
+Multiple R-squared:  0.7667,    Adjusted R-squared:  0.7053 
+F-statistic: 12.49 on 5 and 19 DF,  p-value: 1.835e-05</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(batch.model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>(Intercept)  treatmentB  treatmentC  treatmentD  treatmentE batchBatch2 
+  1.1724940   0.4455249   1.9153967   4.2413688   9.1016661  -1.6877019 </code></pre>
+</div>
+</div>
+<p>For a model with more than one coefficient, <code>summary</code> provides estimates and tests for each coefficient adjusted for all the other coefficients in the model.</p>
+</section>
+<section id="two-factor-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="two-factor-analysis">Two-factor analysis</h3>
+<p>Suppose our experiment involves two factors, treatment and time. <code>lm</code> can be used to fit a two-way ANOVA model:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>twoway.model <span class="ot">&lt;-</span> <span class="fu">lm</span>(expression <span class="sc">~</span> treatment<span class="sc">*</span>time, <span class="at">data =</span> dat)</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(twoway.model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = expression ~ treatment * time, data = dat)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2.0287 -0.4463  0.1082  0.4915  1.7623 
+
+Coefficients:
+                     Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)           0.97965    0.69239   1.415  0.17752    
+treatmentB            0.40637    1.09476   0.371  0.71568    
+treatmentC            1.00813    0.97918   1.030  0.31953    
+treatmentD            3.07266    1.09476   2.807  0.01328 *  
+treatmentE            9.86180    0.97918  10.071 4.55e-08 ***
+timetime2             0.48211    1.09476   0.440  0.66594    
+treatmentB:timetime2 -0.09544    1.54822  -0.062  0.95166    
+treatmentC:timetime2 -0.26339    1.54822  -0.170  0.86718    
+treatmentD:timetime2 -1.02568    1.54822  -0.662  0.51771    
+treatmentE:timetime2 -6.11958    1.54822  -3.953  0.00128 ** 
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 1.199 on 15 degrees of freedom
+Multiple R-squared:  0.912, Adjusted R-squared:  0.8591 
+F-statistic: 17.26 on 9 and 15 DF,  p-value: 2.242e-06</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(twoway.model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>         (Intercept)           treatmentB           treatmentC 
+          0.97965110           0.40636785           1.00813264 
+          treatmentD           treatmentE            timetime2 
+          3.07265513           9.86179766           0.48210723 
+treatmentB:timetime2 treatmentC:timetime2 treatmentD:timetime2 
+         -0.09544075          -0.26339279          -1.02568281 
+treatmentE:timetime2 
+         -6.11958364 </code></pre>
+</div>
+</div>
+<p>The notation <code>treatment*time</code> refers to treatment, time, and the interaction effect of treatment by time.</p>
+<p>Interpretation of coefficients:</p>
+<ul>
+<li>Each coefficient for treatment represents the difference between the indicated group and the reference group <em>at the reference level for the other covariates</em></li>
+<li>For example, “treatmentB” is the difference in expression between treatment B and treatment A at time 1</li>
+<li>Similarly, “timetime2” is the difference in expression between time2 and time1 for treatment A</li>
+<li>The interaction effects (coefficients with “:”) estimate the difference between treatment groups in the effect of time</li>
+<li>The interaction effects ALSO estimate the difference between times in the effect of treatment</li>
+</ul>
+<p>To estimate the difference between treatment B and treatment A at time 2, we need to include the interaction effects:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># A - B at time 2</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>coefs <span class="ot">&lt;-</span> <span class="fu">coef</span>(twoway.model)</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>coefs[<span class="st">"treatmentB"</span>] <span class="sc">+</span> coefs[<span class="st">"treatmentB:timetime2"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>treatmentB 
+ 0.3109271 </code></pre>
+</div>
+</div>
+<p>We can see from <code>summary</code> that one of the interaction effects is significant. Here’s what that interaction effect looks like graphically:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">interaction.plot</span>(<span class="at">x.factor =</span> dat<span class="sc">$</span>time, <span class="at">trace.factor =</span> dat<span class="sc">$</span>treatment, <span class="at">response =</span> dat<span class="sc">$</span>expression)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="session3_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+</section>
+</section>
+<section id="multiple-hypothesis-testing" class="level1">
+<h1>Multiple Hypothesis Testing</h1>
+<p>Let’s think about a simple coin tossing example. How do we know whether or not a coin that we’re tossing is fait? Let’s suppose we start looking at different test statistics. Perhaps the number of consecutive series of 3 or more heads. Or the number of heads in the first 50 coin flips. And so on. A t some point we will find a test that happens to result in a small p-value, even if just by chance (after all, the probability for the p-value to be less than 0.05 under the null hypothesis—fair coin—is one in twenty).</p>
+<p>There is a <a href="http://xkcd.com/882">xkcd comic</a> which illustrates this issue in the context of selective reporting. We just did what is called p-value hacking. You see what the problem is: in our zeal to prove our point we tortured the data until some statistic did what we wanted. A related tactic is hypothesis switching or HARKing – hypothesizing after the results are known: we have a dataset, maybe we have invested a lot of time and money into assembling it, so we need results. We come up with lots of different null hypotheses and test statistics, test them, and iterate, until we can report something.</p>
+<p>Let’s try running our binomial test on a fair coin, and see what we get:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>numFlips <span class="ot">=</span> <span class="dv">100</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>probHead <span class="ot">=</span> <span class="fl">0.5</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>coinFlips <span class="ot">=</span> <span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">"H"</span>, <span class="st">"T"</span>), <span class="at">size =</span> numFlips,</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">replace =</span> <span class="cn">TRUE</span>, <span class="at">prob =</span> <span class="fu">c</span>(probHead, <span class="dv">1</span> <span class="sc">-</span> probHead))</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>numHeads <span class="ot">&lt;-</span> <span class="fu">sum</span>(coinFlips <span class="sc">==</span> <span class="st">"H"</span>)</span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>pval <span class="ot">&lt;-</span> <span class="fu">binom.test</span>(<span class="at">x =</span> numHeads, <span class="at">n =</span> numFlips, <span class="at">p =</span> <span class="fl">0.5</span>)<span class="sc">$</span>p.value</span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>pval</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.6172994</code></pre>
+</div>
+</div>
+<p>This p value is probably relatively large. But what if we keep on repeating the experiment?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Let's make a function for performing our experiment</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>flip_coin <span class="ot">&lt;-</span> <span class="cf">function</span>(numFlips, probHead){</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>  numFlips <span class="ot">=</span> <span class="dv">100</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>  probHead <span class="ot">=</span> <span class="fl">0.50</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>  coinFlips <span class="ot">=</span> <span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">"H"</span>, <span class="st">"T"</span>), <span class="at">size =</span> numFlips,</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">replace =</span> <span class="cn">TRUE</span>, <span class="at">prob =</span> <span class="fu">c</span>(probHead, <span class="dv">1</span> <span class="sc">-</span> probHead))</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>  numHeads <span class="ot">&lt;-</span> <span class="fu">sum</span>(coinFlips <span class="sc">==</span> <span class="st">"H"</span>)</span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>  pval <span class="ot">&lt;-</span> <span class="fu">binom.test</span>(<span class="at">x =</span> numHeads, <span class="at">n =</span> numFlips, <span class="at">p =</span> <span class="fl">0.5</span>)<span class="sc">$</span>p.value</span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(pval)</span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a><span class="co">#And then run it 10000 times</span></span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a>parray <span class="ot">&lt;-</span> <span class="fu">replicate</span>(<span class="dv">10000</span>, <span class="fu">flip_coin</span>(<span class="dv">1000</span>, <span class="fl">0.5</span>), <span class="at">simplify=</span><span class="cn">TRUE</span>)</span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(parray, <span class="at">breaks=</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="session3_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">min</span>(parray)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 4.692413e-06</code></pre>
+</div>
+</div>
+<p>There are a number of methods for transforming p values to correct for multiple hypotheses. These methods can vary greatly in how conservative they are. Most methods are test agnostic, and are performed separately after the hypothesis test is performed.</p>
+<p>It is important to keep in mind that the transformed thresholds or p values (often called q values) resulting from a multiple hypothesis correction are <strong>no longer p values</strong>. They are now useful for choosing whether or not to reject the null hypothesis, but cannot be directly interpreted as the probability of seeing a result this extreme under the null hypothesis. Another important note is that the methods we will see here <strong>assume that all hypotheses are independent</strong>.</p>
+<section id="definitions" class="level2">
+<h2 class="anchored" data-anchor-id="definitions">Definitions</h2>
+<p>Let’s redefine our error table from earlier, in the framework of multiple hypotheses. Thus, each of the following variables represents a count out of the total number of tests performed.</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Test vs reality</th>
+<th>Null is true</th>
+<th>Null is false</th>
+<th>Total</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Rejected</td>
+<td><span class="math inline">\(V\)</span></td>
+<td><span class="math inline">\(S\)</span></td>
+<td><span class="math inline">\(R\)</span></td>
+</tr>
+<tr class="even">
+<td>Not Rejected</td>
+<td><span class="math inline">\(U\)</span></td>
+<td><span class="math inline">\(T\)</span></td>
+<td><span class="math inline">\(m - R\)</span></td>
+</tr>
+<tr class="odd">
+<td>Total</td>
+<td><span class="math inline">\(m_0\)</span></td>
+<td><span class="math inline">\(m-m_0\)</span></td>
+<td><span class="math inline">\(m\)</span></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><p><span class="math inline">\(m\)</span>: total number of tests (and null hypotheses)</p></li>
+<li><p><span class="math inline">\(m_0\)</span>: number of true null hypotheses</p></li>
+<li><p><span class="math inline">\(m - m_0\)</span>: number of false null hypotheses</p></li>
+<li><p><span class="math inline">\(V\)</span>: number of false positives (a measure of type I error)</p></li>
+<li><p><span class="math inline">\(T\)</span>: number of false negatives (a measure of type II error)</p></li>
+<li><p><span class="math inline">\(S, U\)</span>: number of true positives and true negatives</p></li>
+<li><p><span class="math inline">\(R\)</span>: number of rejections</p></li>
+</ul>
+</section>
+<section id="family-wise-error-rate" class="level2">
+<h2 class="anchored" data-anchor-id="family-wise-error-rate">Family wise error rate</h2>
+<p>The <strong>family wise error rate</strong> (FWER) is the probability that $V&gt;0$, i.e., that we make one or more false positive errors.</p>
+<p>We can compute it as the complement of making no false positive errors at all. Recall that <span class="math inline">\(\alpha\)</span> is our probability threshold for rejecting the null hypothesis.</p>
+<p><span class="math display">\[
+P(V&gt;0) = 1 - P(V=0) = 1 - (1-\alpha)^{m_0}
+\]</span></p>
+<p>Note that, as <span class="math inline">\(m_0\)</span> approaches <span class="math inline">\(\infty\)</span>, the FWER approaches 1. In other words, with enough tests we are guaranteed to have at least 1 false positive.</p>
+</section>
+<section id="bonferroni-method" class="level2">
+<h2 class="anchored" data-anchor-id="bonferroni-method">Bonferroni method</h2>
+<p>The Bonferroni method uses the FWER to adjust <span class="math inline">\(\alpha\)</span> such that we can choose a false positive rate across all tests. In other words, to control the FWER to the level <span class="math inline">\(\alpha_{FWER}\)</span> a new threshold is chosen, <span class="math inline">\(\alpha = \alpha_{FWER}/m\)</span>.</p>
+<p>This means that, for <span class="math inline">\(10000\)</span> tests, to set <span class="math inline">\(alpha_{FWER} = 0.05\)</span> our new p value threshold for individual tests would be <span class="math inline">\(5 \times 10{-6}\)</span>. Often FWER control is too conservative, and would lead to an ineffective use of the time and money that was spent to generate and assemble the data.</p>
+</section>
+<section id="false-discovery-rate" class="level2">
+<h2 class="anchored" data-anchor-id="false-discovery-rate">False discovery rate</h2>
+<p>The false discovery rate takes a more relaxed approach than Bonferroni correction. Instead of trying to have no or a fixed total rate of false positives, what if we allowed a small proportion of our null hypothesis rejections to be false positives?</p>
+<p>It uses the total number of null hypotheses rejected to inform what is an acceptable number of false positive errors to let through. It makes the claim that, for instance, making <span class="math inline">\(4\)</span> type I errors out of <span class="math inline">\(10\)</span> rejected null hypotheses is a worse error than making <span class="math inline">\(20\)</span> type I errors out of <span class="math inline">\(100\)</span> rejected null hypotheses.</p>
+<p>To see an example, we will load up the RNA-Seq dataset airway, which contains gene expression measurements (gene-level counts) of four primary human airway smooth muscle cell lines with and without treatment with dexamethasone, a synthetic glucocorticoid.</p>
+<p>Conceptually, the tested null hypothesis is similar to that of the t-test, although the details are slightly more involved since we are dealing with count data.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"DESeq2"</span>)</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"airway"</span>)</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"tidyverse"</span>)</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(<span class="st">"airway"</span>)</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>aw   <span class="ot">=</span> <span class="fu">DESeqDataSet</span>(<span class="at">se =</span> airway, <span class="at">design =</span> <span class="sc">~</span> cell <span class="sc">+</span> dex)</span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>aw   <span class="ot">=</span> <span class="fu">DESeq</span>(aw)</span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a><span class="co"># This next line filters out NA p values from the dataset</span></span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a>awde <span class="ot">=</span> <span class="fu">as.data.frame</span>(<span class="fu">results</span>(aw)) <span class="sc">|&gt;</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(pvalue))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In this dataset, we have performed a statistical test for each of <span class="math inline">\(33,469\)</span> measured genes. We can look at a histogram of the p values:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(awde, <span class="fu">aes</span>(<span class="at">x =</span> pvalue)) <span class="sc">+</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> <span class="fl">0.025</span>, <span class="at">boundary =</span> <span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="session3_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Let’s say we reject the null hypothesis for all p values less than <span class="math inline">\(\alpha\)</span>. We can see how many null hypotheses we reject:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>alpha <span class="ot">&lt;-</span> <span class="fl">0.025</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Recall that TRUE and FALSE are stored as 0 and 1, so we can sum to get a count</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(awde<span class="sc">$</span>pvalue <span class="sc">&lt;=</span> alpha)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 4772</code></pre>
+</div>
+</div>
+<p>And we can estimate <span class="math inline">\(V\)</span>, how many false positives we have:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>alpha <span class="sc">*</span> <span class="fu">nrow</span>(awde)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 836.725</code></pre>
+</div>
+</div>
+<p>We can then estimate the fraction of false rejections as:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>(alpha <span class="sc">*</span> <span class="fu">nrow</span>(awde))<span class="sc">/</span><span class="fu">sum</span>(awde<span class="sc">$</span>pvalue <span class="sc">&lt;=</span> alpha)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.1753405</code></pre>
+</div>
+</div>
+<p>Formally, the <strong>false discovery rate</strong> (FDR) is defined as: <span class="math display">\[
+FDR = E\left[\frac{V}{max(R,1)}\right]
+\]</span> Which is the average proportion of rejections that are false rejections.</p>
+</section>
+<section id="the-benjamini-hochberg-algorithm-for-controlling-the-fdr" class="level2">
+<h2 class="anchored" data-anchor-id="the-benjamini-hochberg-algorithm-for-controlling-the-fdr">The Benjamini-Hochberg algorithm for controlling the FDR</h2>
+<p>The Benjamini-Hochberg algorithm controls for a chosen FDR threshold via the following steps:</p>
+<ul>
+<li>First, order the p values in increasing order, <span class="math inline">\(p_{(1)}...p_{(m)}\)</span></li>
+<li>Then for some choice of the target FDR, <span class="math inline">\(\varphi\)</span>, find the largest value of <span class="math inline">\(k\)</span> that satisfies <span class="math inline">\(p_{(k)} &lt; \varphi k/m\)</span></li>
+<li>Reject hypotheses <span class="math inline">\(1\)</span> through <span class="math inline">\(k\)</span></li>
+</ul>
+<p>We can see how this procedure works when applied to our RNA-Seq p value distribution:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>phi  <span class="ot">=</span> <span class="fl">0.10</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>awde <span class="ot">=</span> <span class="fu">mutate</span>(awde, <span class="at">rank =</span> <span class="fu">rank</span>(pvalue))</span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>m    <span class="ot">=</span> <span class="fu">nrow</span>(awde)</span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dplyr<span class="sc">::</span><span class="fu">filter</span>(awde, rank <span class="sc">&lt;=</span> <span class="dv">7000</span>), <span class="fu">aes</span>(<span class="at">x =</span> rank, <span class="at">y =</span> pvalue)) <span class="sc">+</span></span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span> <span class="fu">geom_abline</span>(<span class="at">slope =</span> phi <span class="sc">/</span> m, <span class="at">col =</span> <span class="st">"red"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="session3_files/figure-html/unnamed-chunk-24-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>We find the rightmost point where our p-values and the expected null false discoveries intersect, then reject all tests to the left.</p>
+</section>
+<section id="multiple-hypothesis-correction-in-r" class="level2">
+<h2 class="anchored" data-anchor-id="multiple-hypothesis-correction-in-r">Multiple Hypothesis Correction in R</h2>
+<p>We can use Bonferroni correction or the Benjamini-Hochberg algorithm using the function <code>p.adjust</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">p.adjust</span>(awde<span class="sc">$</span>pvalue, <span class="at">method=</span><span class="st">"bonferroni"</span>)</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="fu">p.adjust</span>(awde<span class="sc">$</span>pvalue, <span class="at">method=</span><span class="st">"BH"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="dimensionality-reduction" class="level1">
+<h1>Dimensionality Reduction</h1>
+<section id="pca" class="level2">
+<h2 class="anchored" data-anchor-id="pca">PCA</h2>
+<p>Load in the data <code>phospho_exp2_safe.csv</code> and <code>phospho_exp2_safe.csv</code>.</p>
+<p>There are two variables of interest, the time, 0, 5, or 60 minutes post-infection, and the genotype, WT, NPC1 knockout and RAB7A knockout.</p>
+<p>Unfortunately, all of this data is embedded in the column names of the dataset.</p>
+<p>Create a <code>metadata_plex#</code> dataframes to contain this data instead. You can try to do this programatically from the column names, or you can type out the data manually.</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Solution
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="co">#First we load the data normally</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>plex2_data <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"../data/phospho_exp2_safe.csv"</span>)</span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>plex3_data <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"../data/phospho_exp3_safe.csv"</span>)</span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a><span class="co">#We'll use the stringr library to split up the column names</span></span>
+<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stringr, <span class="at">quietly =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-9"><a href="#cb56-9" aria-hidden="true" tabindex="-1"></a>make_metadata <span class="ot">&lt;-</span> <span class="cf">function</span>(in_names){</span>
+<span id="cb56-10"><a href="#cb56-10" aria-hidden="true" tabindex="-1"></a>  split_names <span class="ot">&lt;-</span> <span class="fu">str_split_fixed</span>(in_names, <span class="st">"_"</span>, <span class="dv">3</span>)</span>
+<span id="cb56-11"><a href="#cb56-11" aria-hidden="true" tabindex="-1"></a>  metadata <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(split_names)</span>
+<span id="cb56-12"><a href="#cb56-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">#paste0 lets us concatenate strings</span></span>
+<span id="cb56-13"><a href="#cb56-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames</span>(metadata) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">'sample'</span>, <span class="fu">rownames</span>(metadata))</span>
+<span id="cb56-14"><a href="#cb56-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(metadata) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"condition"</span>,<span class="st">"time"</span>,<span class="st">"replicate"</span>)</span>
+<span id="cb56-15"><a href="#cb56-15" aria-hidden="true" tabindex="-1"></a>  metadata<span class="sc">$</span>condition <span class="ot">&lt;-</span> <span class="fu">factor</span>(metadata<span class="sc">$</span>condition)</span>
+<span id="cb56-16"><a href="#cb56-16" aria-hidden="true" tabindex="-1"></a>  metadata<span class="sc">$</span>time <span class="ot">&lt;-</span> <span class="fu">factor</span>(metadata<span class="sc">$</span>time, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"0Min"</span>,<span class="st">"5Min"</span>,<span class="st">"60Min"</span>))</span>
+<span id="cb56-17"><a href="#cb56-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(metadata)</span>
+<span id="cb56-18"><a href="#cb56-18" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb56-19"><a href="#cb56-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-20"><a href="#cb56-20" aria-hidden="true" tabindex="-1"></a>metadata_plex2 <span class="ot">&lt;-</span> <span class="fu">make_metadata</span>(<span class="fu">colnames</span>(plex2_data[,<span class="dv">6</span><span class="sc">:</span><span class="dv">15</span>]))</span>
+<span id="cb56-21"><a href="#cb56-21" aria-hidden="true" tabindex="-1"></a>metadata_plex3 <span class="ot">&lt;-</span> <span class="fu">make_metadata</span>(<span class="fu">colnames</span>(plex3_data[,<span class="dv">6</span><span class="sc">:</span><span class="dv">15</span>]))</span>
+<span id="cb56-22"><a href="#cb56-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-23"><a href="#cb56-23" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(plex2_data)[<span class="dv">6</span><span class="sc">:</span><span class="dv">15</span>] <span class="ot">&lt;-</span> <span class="fu">rownames</span>(metadata_plex2)</span>
+<span id="cb56-24"><a href="#cb56-24" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(plex3_data)[<span class="dv">6</span><span class="sc">:</span><span class="dv">15</span>] <span class="ot">&lt;-</span> <span class="fu">rownames</span>(metadata_plex3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="pca-1" class="level2">
+<h2 class="anchored" data-anchor-id="pca-1">PCA</h2>
+<p>As an initial quality check, let’s run PCA on our data. We can use <code>prcomp</code> to run pca, and <code>autoplot</code> to plot the result. Let’s try making 2 pca plots, 1 for each 10plex. We can set the color equal to the genotype and the shape of the points equal to the time.</p>
+<p>You can call <code>prcomp</code> and <code>autoplot</code> like this:</p>
+<pre><code>library(ggfortify)
+#PCA Plots
+pca_res2 &lt;- prcomp(plex2_data, scale = FALSE)
+autoplot(pca_res2, data=metadata_plex2, colour = 'condition', shape='time', size=3)</code></pre>
+<p><em>Hint: <code>prcomp</code> might be expecting data in a wide format as opposed to a long format, meaning that we need to make each peptide a column and each row a sample. We can use the t() function and convert the result to a dataframe to get our data into this format.</em></p>
+<p><em>Note: You may need to set the <code>scale</code> parameter to <code>FALSE</code> to avoid an error in <code>prcomp</code>.</em></p>
+<p>We should look at how our replicates are clustered. Does everything look good in both 10-plexes?</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Solution
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>We need to transpose the numeric parts of the data in order to run PCA on it.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggfortify)</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>pca_res2 <span class="ot">&lt;-</span> <span class="fu">prcomp</span>(<span class="fu">t</span>(plex2_data[,<span class="dv">6</span><span class="sc">:</span><span class="dv">15</span>]), <span class="at">scale =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="fu">autoplot</span>(pca_res2, <span class="at">data=</span>metadata_plex2, <span class="at">colour =</span> <span class="st">'condition'</span>, <span class="at">shape=</span><span class="st">'time'</span>, <span class="at">size=</span><span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="session3_files/figure-html/unnamed-chunk-27-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>pca_res3 <span class="ot">&lt;-</span> <span class="fu">prcomp</span>(<span class="fu">t</span>(plex3_data[,<span class="dv">6</span><span class="sc">:</span><span class="dv">15</span>]), <span class="at">scale =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a><span class="fu">autoplot</span>(pca_res3, <span class="at">data=</span>metadata_plex3, <span class="at">colour =</span> <span class="st">'condition'</span>, <span class="at">shape=</span><span class="st">'time'</span>, <span class="at">size=</span><span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="session3_files/figure-html/unnamed-chunk-27-2.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>At first glance, both plots look messy. However, when interpreting a PCA plot is important to note how much variance is explained by each principle component. On both of these, the 1st PC explains over 80% of the variance, while the second less than 10%. Thus, we care much more (as in 8 times more) about the X axis than the Y axis.</p>
+<p>In both plots, we see much stronger time point clustering than condition clustering, given how muchn more important the horizontal axis is. However, in plex3 there is one 60 minute point with the 0 minute points, and vice versa.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="heatmaps" class="level2">
+<h2 class="anchored" data-anchor-id="heatmaps">Heatmaps</h2>
+<p>Let’s explore this more by looking at some heatmaps of our data. We can use the <code>heatmap</code> function to plot a heatmap of the correlation between each of the samples in each 10plex.</p>
+<p>Below is how to calculate the correlation and call the <code>heatmap</code> function. You can try to use the <code>RowSideColors</code> argument or change the column names to improve the visualization.</p>
+<pre><code>heatmap(x=cor(plex2_data))</code></pre>
+<p><em>Hint: <code>heatmap</code> only accepts numeric columns.</em></p>
+<p>Is there anything unexpected in how the samples have clustered here?</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Solution
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="fu">heatmap</span>(<span class="at">x=</span><span class="fu">cor</span>(plex2_data[,<span class="dv">6</span><span class="sc">:</span><span class="dv">15</span>]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="session3_files/figure-html/unnamed-chunk-28-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">heatmap</span>(<span class="at">x=</span><span class="fu">cor</span>(plex3_data[,<span class="dv">6</span><span class="sc">:</span><span class="dv">15</span>]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="session3_files/figure-html/unnamed-chunk-28-2.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>At first glance our heatmaps look alright, but that is because they have been clustered automatically by the heatmap function. We can tell heatmap not to cluster to see things better or use the <code>RowSideColors</code> argument.</p>
+<p>Not clustering:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="fu">heatmap</span>(<span class="at">x=</span><span class="fu">cor</span>(plex2_data[,<span class="dv">6</span><span class="sc">:</span><span class="dv">15</span>]), <span class="at">Rowv=</span><span class="cn">NA</span>, <span class="at">Colv=</span><span class="cn">NA</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="session3_files/figure-html/unnamed-chunk-29-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">heatmap</span>(<span class="at">x=</span><span class="fu">cor</span>(plex3_data[,<span class="dv">6</span><span class="sc">:</span><span class="dv">15</span>]), <span class="at">Rowv=</span><span class="cn">NA</span>, <span class="at">Colv=</span><span class="cn">NA</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="session3_files/figure-html/unnamed-chunk-29-2.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Using <code>RowSideColors</code>:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(RColorBrewer)</span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>colSide2 <span class="ot">&lt;-</span> <span class="fu">brewer.pal</span>(<span class="dv">3</span>, <span class="st">"Set1"</span>)[metadata_plex2<span class="sc">$</span>time]</span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a><span class="fu">heatmap</span>(<span class="at">x=</span><span class="fu">cor</span>(plex2_data[,<span class="dv">6</span><span class="sc">:</span><span class="dv">15</span>]), <span class="at">RowSideColors =</span> colSide2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="session3_files/figure-html/unnamed-chunk-30-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>colSide3 <span class="ot">&lt;-</span> <span class="fu">brewer.pal</span>(<span class="dv">3</span>, <span class="st">"Set1"</span>)[metadata_plex3<span class="sc">$</span>time]</span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a><span class="fu">heatmap</span>(<span class="at">x=</span><span class="fu">cor</span>(plex3_data[,<span class="dv">6</span><span class="sc">:</span><span class="dv">15</span>]), <span class="at">RowSideColors =</span> colSide3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="session3_files/figure-html/unnamed-chunk-30-2.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>In both versions we clearly see a single sample in plex 3 looking to be out of place.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="resolving-the-issue" class="level2">
+<h2 class="anchored" data-anchor-id="resolving-the-issue">Resolving the issue</h2>
+<p>Decide what to do about the potential label swap and explain your reasoning. You could declare there to be too much uncertainty and report to your collaborator that they will have to redo the experiment, decide there is no label swap, or correct a label swap and continue the analysis.</p>
+<p>Do you feel confident enough to continue the analysis, or is there too much uncertainty to use this data? What other factors might influence your decision?</p>
+<p>If there is additional analysis you want to perform or calculations you want to make to support your answer, feel free to do so. If you are unsure how to perform that analysis or it would be outside the scope of a problem set, instead describe what you would do and how you would use the results.</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Solution
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>There are a number of ‘correct’ answers here. It makes sense to redo the experiment, gain more biological context/knowledge, try to construct a statistical test, or other directions.</p>
+<p>In reality, we ultimately determined that there was a label swap between samples 3 and 5 in 10plex 3. This was based on the irregular time series clustering, and that it appeared that time series clustering was significantly stronger than condition clustering. For the real experiment we also had a third 10plex with a slightly different design and corresponding proteomic measurements for all 3 10plexes which we could confirm the clustering patterns with.</p>
+<p><strong>However, we also were okay correcting this swap and moving forward because this was for an exploratory analysis.</strong> We ultimately were using this data to generate hypothesis and perform targeted experiments based on what seemed unusual. Thus, it wasn’t the end of the world if a label swap slipped through, since we were not drawing any concrete conclusions from the data. If this had been a final experiment testing a specific hypothesis, we would have redone it.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="tsne-and-umap" class="level2">
+<h2 class="anchored" data-anchor-id="tsne-and-umap">TSNE and UMAP</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(umap)</span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>ump <span class="ot">&lt;-</span> <span class="fu">umap</span>(<span class="fu">t</span>(plex2_data[,<span class="dv">6</span><span class="sc">:</span><span class="dv">15</span>]), <span class="at">n_neighbors =</span> <span class="dv">4</span>, <span class="at">random_state =</span> <span class="dv">123</span>)</span>
+<span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb67-5"><a href="#cb67-5" aria-hidden="true" tabindex="-1"></a>plex2.umap <span class="ot">&lt;-</span> metadata_plex2</span>
+<span id="cb67-6"><a href="#cb67-6" aria-hidden="true" tabindex="-1"></a>plex2.umap<span class="sc">$</span>x <span class="ot">&lt;-</span> ump<span class="sc">$</span>layout[,<span class="dv">1</span>]</span>
+<span id="cb67-7"><a href="#cb67-7" aria-hidden="true" tabindex="-1"></a>plex2.umap<span class="sc">$</span>y <span class="ot">&lt;-</span> ump<span class="sc">$</span>layout[,<span class="dv">2</span>]</span>
+<span id="cb67-8"><a href="#cb67-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb67-9"><a href="#cb67-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> plex2.umap, <span class="fu">aes</span>(<span class="at">x=</span>x, <span class="at">y=</span>y, <span class="at">color=</span>condition, <span class="at">shape=</span>time)) <span class="sc">+</span> <span class="fu">geom_point</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="session3_files/figure-html/unnamed-chunk-31-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
