@@ -87,7 +87,7 @@ datatable(head(rna,20))
 
 ::: {.callout-note icon=false}
 
-## Challenge:
+## Exercise
 
 Using pipes, subset the `rna` data to keep observations in female mice at time 0,
 where the gene has an expression higher than 50000, and retain only the columns
@@ -95,23 +95,10 @@ where the gene has an expression higher than 50000, and retain only the columns
 
 :::
 
-::: {.callout-tip icon=false collapse=true}
-
-## Solution
-
-```{r}
-rna %>%
-  filter(expression > 50000,
-         sex == "Female",
-         time == 0 ) %>%
-  select(gene, sample, time, expression, age)
-```
-
-:::
 
 ::: {.callout-note icon=false}
 
-## Challenge
+## Exercise
 
 Create a new data frame from the `rna` data that meets the following
 criteria: contains only the `gene`, `chromosome_name`,
@@ -125,45 +112,20 @@ this data frame!
 
 :::
 
-::: {.callout-tip icon=false collapse=true}
-
-## Solution
-
-```{r, eval=TRUE, purl=TRUE}
-rna %>%
-  mutate(expression = log(expression)) %>%
-  select(gene, chromosome_name, phenotype_description, sample, expression) %>%
-  filter(chromosome_name == "X" | chromosome_name == "Y") %>%
-  filter(!is.na(phenotype_description)) %>%
-  filter(expression > 5)
-```
-:::
 
 ::: {.callout-note icon=false}
 
-## Challenge
+## Exercise
 
 Calculate the mean expression level of gene "Dok3" by timepoints.
 
 :::
 
 
-::: {.callout-tip icon=false collapse=true}
-
-## Solution
-
-```{r, purl=TRUE}
-rna %>%
-  filter(gene == "Dok3") %>%
-  group_by(time) %>%
-  summarise(mean = mean(expression))
-```
-
-:::
 
 ::: {.callout-note icon=false}
 
-## Challenge
+## Exercise
 
 1. How many genes were analysed in each sample?
 2. Use `group_by()` and `summarise()` to evaluate the sequencing depth (the sum of all counts) in each sample. Which sample has the highest sequencing depth?
@@ -172,33 +134,6 @@ rna %>%
 
 :::
 
-::: {.callout-tip icon=false collapse=true}
-
-## Solution
-
-```{r}
-## 1.
-rna %>%
-  count(sample)
-## 2.
-rna %>%
-  group_by(sample) %>%
-  summarise(seq_depth = sum(expression)) %>%
-  arrange(desc(seq_depth))
-## 3.
-rna %>%
-  filter(sample == "GSM2545336") %>%
-  group_by(gene_biotype) %>%
-  count(gene_biotype) %>%
-  arrange(desc(n))
-## 4.
-rna %>%
-  filter(phenotype_description == "abnormal DNA methylation") %>%
-  group_by(gene, time) %>%
-  summarise(mean_expression = mean(log(expression))) %>%
-  arrange()
-```
-:::
 
 
 # Review: Tidyverse
