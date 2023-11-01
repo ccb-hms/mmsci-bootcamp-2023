@@ -493,6 +493,10 @@ variables of the table have been encoded as missing.
 
 This section introduces two useful packages for general-purpose work on genomic coordinates. The [rtracklayer][] package provides the `import()` function to read many types of genomic files (e.g., BED, GTF, VCF, FASTA) into _Bioconductor_ objects. The [GenomicRanges][] package provides functions for manipulating genomic ranges, i.e., descriptions of exons, genes, ChIP peaks, called variants, ... as coordinates in genome space.
 
+```{r, fig.cap="Genomic Ranges objects in R.", echo=FALSE, message=FALSE}
+knitr::include_graphics("../img/granges.png")
+```
+
 We start by attaching the [rtracklayer][] and [GenomicRanges][] packages to our session.
 
 ```{r, message=FALSE}
@@ -562,11 +566,6 @@ For this example, the metadata is comprised of `"type"`,
 but almost anything can be stored in the metadata portion of a `GRanges`
 object.
 
-**Task:** We consider the collection of CpG islands in the human genome described
-in [Wu et al., 2010](https://doi.org/10.1093/biostatistics/kxq005). 
-Import the collection of CpG islands from
-[here](http://www.haowulab.org/software/makeCGI/model-based-cpg-islands-hg19.txt)
-as a `GRanges`. 
 
 We can understand a `GRanges` as a specific `data.frame` that stores
 genomic coordinates. As such, we are able to seamlessly convert a `data.frame` 
@@ -605,13 +604,13 @@ head( start(scna) )
 head( scna$type )
 ```
 
-Use the `width()` accessor function to extract a vector of widths of each CpG island. Transform the values using `log10()`, and visualize the distribution using `hist()`.
+Use the `width()` accessor function to extract a vector of widths for `scrna`. Transform the values using `log10()`, and visualize the distribution using `hist()`.
 
 ```{r}
 hist(log10(width(scna)))
 ```
 
-Use `subset()` to select the CpG islands on chromosomes 1 and 2.
+Use `subset()` to select the mutations on chromosomes 1 and 2.
 
 ```{r}
 subset(scna, seqnames %in% c("chr1", "chr2"))
@@ -619,7 +618,7 @@ subset(scna, seqnames %in% c("chr1", "chr2"))
 
 **Genomic annotations**
 
-Earlier we mentioned 'Annotation data' packages. An example is the TxDb family of packages. These packages contain information on the genomic coordinates of exons, genes, transcripts, etc. Attach the TxDb package corresponding to the _Homo sapiens_ hg19 genome build using the UCSC 'knownGene' track.
+In Bioconductor there are a number of 'Annotation data' packages. An example is the TxDb family of packages. These packages contain information on the genomic coordinates of exons, genes, transcripts, etc. Attach the TxDb package corresponding to the _Homo sapiens_ hg19 genome build using the UCSC 'knownGene' track.
 
 ```{r, message=FALSE}
 library(TxDb.Hsapiens.UCSC.hg19.knownGene)
@@ -671,17 +670,23 @@ Hints:
 transcript ID (`tx_id`) and/or transcript name (`tx_name`) for each exon.
 
 ```{r}
+# Solution 1: answering the question  
+# " what is the maximum number of exons **annotated** to a transcript
 library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 ex <- exons(TxDb.Hsapiens.UCSC.hg38.knownGene, columns="tx_name")
 
 ex.chr1 <- subset(ex, seqnames == "chr1")
 tab <- table(unlist(ex.chr1$tx_name))
 max(tab)
+```
 
-# ENST00000369373.9 (NBPF20-201) has 138 exons annotated to it, in agreement with ENSEMBL genome browser
-# http://www.ensembl.org/Homo_sapiens/Transcript/Summary?g=ENSG00000162825;r=1:145289900-145405567;t=ENST00000369373
-# ENST00000392971.6 (NBPF20-202) has also 138 exons, another transcript from the NBPF20 gene
+```{r}
+# ENST00000698833.1 (NBPF20-202) has 143 exons annotated to it, in agreement with ENSEMBL genome browser
+# https://useast.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;g=ENSG00000162825;r=1:145290005-145425603;t=ENST00000698833
+head( sort(tab, decreasing=TRUE) )
+```
 
+```{r}
 # Solution 2 : answering the question 
 # "what is the maximum number of exons **overlapping** a transcript"
 
@@ -706,6 +711,62 @@ In every call to an overlap operation in two sets of _stranded_ genomic ranges,
 it is necessary to specify `ignore.strand = TRUE`, except in rare cases when we
 do not want ranges on opposite strands to be considered overlapping.
 
+**Exercise**
+
+We consider the collection of CpG islands in the human genome described
+in [Wu et al., 2010](https://doi.org/10.1093/biostatistics/kxq005). 
+Let's import the collection of CpG islands from
+[here](http://www.haowulab.org/software/makeCGI/model-based-cpg-islands-hg19.txt)
+as a `GRanges`. 
+
+```{r}
+cpg <- read.delim("http://www.haowulab.org/software/makeCGI/model-based-cpg-islands-hg19.txt")
+cpg <- makeGRangesFromDataFrame(cpg, keep.extra.columns = TRUE)
+genome(cpg) <- "hg19"
+cpg <- sort(cpg)
+cpg
+```
+
+We also will need the set of promotor regions in *hg19*
+
+```{r}
+proms <- rtracklayer::import("../data/hg19proms.bed")
+genome(proms) <- "hg19"
+proms
+```
+
+
+1. Determine the percentage of promoters on chromosome 21 that overlap with at least one CpG island.
+
+```{r}
+chr21.cpg <- subset(cpg, seqnames == "chr21")
+chr21.proms <- subset(proms, seqnames == "chr21")
+olaps <- countOverlaps(chr21.proms, chr21.cpg)
+head(olaps) # Preview the beginning of the data
+
+sum(olaps > 0) / length(olaps) * 100 
+```
+
+2. For those promoters that overlap with CpG islands, annotate the number of overlapping CpG islands as an additional column. What is the maximum number of overlapping CpG islands for one promoter at a time?
+
+```{r}
+# just number of overlapping islands
+chr21.proms.with.cpg <- subsetByOverlaps(chr21.proms, chr21.cpg)
+chr21.proms.with.cpg$nr.cpg <- olaps[olaps > 0]
+chr21.proms.with.cpg
+```
+
+```{r}
+max(chr21.proms.with.cpg$nr.cpg)
+```
+
+```{r}
+# transfer the CpGcount column
+olps <- findOverlaps(chr21.proms, chr21.cpg)
+joined.proms.chr21 <- chr21.proms[queryHits(olps)]
+joined.proms.chr21$CpGcount <- chr21.cpg[subjectHits(olps)]$CpGcount
+max(joined.proms.chr21$CpGcount)
+```
 
 # Accessing genomic annotations
 
@@ -745,14 +806,11 @@ rpkm_data$gene <- gene_map$mgi_symbol[ind]
 #2
 idx <- match(colnames(rpkm_data), rownames(metadata))
 metadata[idx, ]
-
 ```
 
-We can use the `listAttributes()` and `listFilters()` functions to see what other information we can get using `getBM`. Choose another piece of data to add to `rpkm_data`.
+We can use the `listAttributes()` and `listFilters()` functions to see what other information we can get using `getBM`. 
 
-
-Use `getBM` to find all genes on chromosomes 2, 6, or 9. Create another dataframe only containing these genes.
-
+Let's use `getBM` to find all genes on chromosomes 2, 6, or  and create another dataframe only containing these genes.
 
 ```{r}
 #Get the chomosome annotations

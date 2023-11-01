@@ -85,6 +85,22 @@ rna <- read_csv("../data/rnaseq.csv")
 datatable(head(rna,20))
 ```
 
+The columns of the dataset are as follows:
+
+| Column     | Description                                                                                  |
+| ---------- | -------------------------------------------------------------------------------------------- |
+| gene       | The name of the gene that was measured                                                       |
+| sample     | The name of the sample the gene expression was measured in                                   |
+| expression | The value of the gene expression                                                             |
+| organism   | The organism/species - here all data stem from mice                                          |
+| age        | The age of the mouse (all mice were 8 weeks here)                                            |
+| sex        | The sex of the mouse                                                                         |
+| infection  | The infection state of the mouse, i.e. infected with Influenza A or not infected.            |
+| strain     | The Influenza A strain.                                                                      |
+| time       | The duration of the infection (in days).                                                     |
+| tissue     | The tissue that was used for the gene expression experiment, i.e. cerebellum or spinal cord. |
+| mouse      | The mouse unique identifier.                                                                 |
+
 ::: {.callout-note icon=false}
 
 ## Challenge:
