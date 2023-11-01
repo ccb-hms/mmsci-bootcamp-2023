@@ -1,0 +1,375 @@
+---
+title: "Session 2: Manipulating Biological Data"
+format: html
+---
+
+# Data
+
+We are going to use part of the data published by [Blackmore et al. (2017)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5544260/), The effect of upper-respiratory infection on transcriptomic changes in the CNS. The goal of the study was to determine the effect of an upper-respiratory infection on changes in RNA transcription occurring in the cerebellum and spinal cord post infection. Gender matched eight week old C57BL/6 mice were inoculated with saline or with Influenza A by intranasal route and transcriptomic changes in the cerebellum and spinal cord tissues were evaluated by RNA-seq at days 0 (non-infected), 4 and 8.
+
+```{r}
+## load the tidyverse packages
+library("tidyverse")
+rna <- read_csv("../data/rnaseq.csv")
+```
+
+The columns of the dataset are as follows:
+
+| Column     | Description                                                                                  |
+| ---------- | -------------------------------------------------------------------------------------------- |
+| gene       | The name of the gene that was measured                                                       |
+| sample     | The name of the sample the gene expression was measured in                                   |
+| expression | The value of the gene expression                                                             |
+| organism   | The organism/species - here all data stem from mice                                          |
+| age        | The age of the mouse (all mice were 8 weeks here)                                            |
+| sex        | The sex of the mouse                                                                         |
+| infection  | The infection state of the mouse, i.e. infected with Influenza A or not infected.            |
+| strain     | The Influenza A strain.                                                                      |
+| time       | The duration of the infection (in days).                                                     |
+| tissue     | The tissue that was used for the gene expression experiment, i.e. cerebellum or spinal cord. |
+| mouse      | The mouse unique identifier.                                                                 |
+
+# Reshaping Data
+
+```{r, fig.cap="Wide pivot of the `rna` data.", echo=FALSE, message=FALSE}
+knitr::include_graphics("../img/pivot_wider.png")
+```
+
+
+```{r, fig.cap="Long pivot of the `rna` data.", echo=FALSE, message=FALSE}
+knitr::include_graphics("../img/pivot_longer.png")
+```
+
+::: {.callout-note icon=false}
+
+## Question
+
+Starting from the rna table, use the `pivot_wider()` function to create
+a wide-format table giving the gene expression levels in each mouse.
+Then use the `pivot_longer()` function to restore a long-format table.
+
+:::
+
+::: {.callout-note icon=false}
+
+## Question
+
+Subset genes located on X and Y chromosomes from the `rna` data frame and
+spread the data frame with `sex` as columns, `chromosome_name` as
+rows, and the mean expression of genes located in each chromosome as the values,
+as in the following tibble:
+
+```{r, echo=FALSE, message=FALSE}
+knitr::include_graphics("../img/Exercise_pivot_W.png")
+```
+
+You will need to summarise before reshaping!
+
+:::
+
+::: {.callout-note icon=false}
+
+## Question
+
+Use the `rna` dataset to create an expression matrix where each row
+represents the mean expression levels of genes and columns represent
+the different timepoints.
+
+:::
+
+
+::: {.callout-note icon=false}
+
+## Question
+
+Use the previous data frame containing mean expression levels per timepoint and create
+a new column containing fold-changes between timepoint 8 and timepoint 0, and fold-changes
+between timepoint 8 and timepoint 4.
+Convert this table into a long-format table gathering the fold-changes calculated.
+
+:::
+
+# Joining
+
+::: {.callout-note icon=false}
+
+## Challenge:
+
+Load in the file `annot3.csv`. Using the `full_join()`
+function, join tables `rna_mini` and `annot3`. What has happened for
+genes *Klk6*, *mt-Tf*, *mt-Rnr1*, *mt-Tv*, *mt-Rnr2*, and *mt-Tl1* ?
+
+:::
+
+
+# Genomic Ranges
+
+This section introduces two useful packages for general-purpose work on genomic coordinates. The [rtracklayer][] package provides the `import()` function to read many types of genomic files (e.g., BED, GTF, VCF, FASTA) into _Bioconductor_ objects. The [GenomicRanges][] package provides functions for manipulating genomic ranges, i.e., descriptions of exons, genes, ChIP peaks, called variants, ... as coordinates in genome space.
+
+```{r, fig.cap="Genomic Ranges objects in R.", echo=FALSE, message=FALSE}
+knitr::include_graphics("../img/granges.png")
+```
+
+We start by attaching the [rtracklayer][] and [GenomicRanges][] packages to our session.
+
+```{r, message=FALSE}
+library(rtracklayer)
+library(GenomicRanges)
+```
+
+## *GRanges*: Genomic Ranges
+
+The central genomic data structure is the `GRanges` class, 
+which represents a collection of genomic ranges
+that each have a single start and end location on the genome. It can be
+used to store the location of genomic features such as binding
+sites, read alignments and transcripts. 
+
+## Constructing a *GRanges* object from data.frame
+
+Let's read in a text file in [BED format][]. The file contains the coordinates of
+regions of recurrent somatic copy number alteration in the
+[TCGA ovarian cancer cohort](https://www.nature.com/articles/nature10166).
+
+We use `file.choose()` to find the file on our file system:
+
+```{r, eval = FALSE}
+fname <- file.choose()   # TCGA.OVC.GISTIC2.SCNAs.hg19.bed
+```
+
+```{r, echo = FALSE}
+fname <- "../data/TCGA.OVC.GISTIC2.SCNAs.hg19.bed"
+```
+
+```{r}
+fname
+file.exists(fname)
+```
+
+and read it into an R `data.frame`.
+
+```{r}
+df <- read.delim(fname, header = FALSE)
+head(df) 
+colnames(df) <- c("seqnames", "start", "end", "type")
+head(df) 
+```
+
+If we have a `data.frame` containing genomic coordinates with additional annotation
+(here: integer copy number state), 
+we can call `makeGRangesFromDataFrame()` to promote the `data.frame` to a `GRanges`.
+
+This adds semantics, formal constraints, and range-specific functionality.
+
+
+```{r example-GRanges}
+gr <- makeGRangesFromDataFrame(df, keep.extra.columns = TRUE)
+gr
+```
+
+creates a `GRanges` object with 70 genomic ranges, each corresponding to a region
+of recurrent somatic copy number alteration in the 
+[TCGA ovarian cancer cohort](https://www.nature.com/articles/nature10166).
+
+The output is separated by `|` symbols: 
+the genomic coordinates (seqnames, ranges, and strand) are located on the 
+left and the metadata columns (here: alteration type) are located on the right. 
+
+For this example, the metadata is comprised of `"type"`, 
+but almost anything can be stored in the metadata portion of a `GRanges`
+object.
+
+
+We can understand a `GRanges` as a specific `data.frame` that stores
+genomic coordinates. As such, we are able to seamlessly convert a `data.frame` 
+to a `GRanges` (and vice versa), i.e. we can also easily turn a `GRanges` back into an
+ordinary `data.frame`:
+
+```{r}
+df <- as.data.frame(gr)
+head(df)
+```
+
+## Loading a *GRanges* object from a standard file format
+
+We often obtain data on genomic ranges from standard track formats, like [BED format][]. 
+The 
+[rtracklayer](http://bioconductor.org/packages/rtracklayer) 
+package parses those files directly into `GRanges` objects. 
+
+
+Then use `import()` from [rtracklayer][] to read the data into _R_.
+The result is again a `GRanges` object describing each copy number alteration.
+
+```{r}
+scna <- import(fname, genome = "hg19", extraCols = c(type = "character"))
+scna
+```
+
+
+**Working with genomic ranges**
+
+There are two parts to a `GenomicRanges` object. The `seqnames` (chromosomes, in the present case), start and end coordinates, and strand are _required_. Additional elements such as `name` in the current example are optional.
+Required components are accessed by functions such as `start()`, `end()` and `width()`. Optional components can be accessed using the `$` notation.
+
+```{r}
+head( start(scna) )
+head( scna$type )
+```
+
+Use the `width()` accessor function to extract a vector of widths for `scrna`. Transform the values using `log10()`, and visualize the distribution using `hist()`.
+
+```{r}
+hist(log10(width(scna)))
+```
+
+Use `subset()` to select the mutations on chromosomes 1 and 2.
+
+```{r}
+subset(scna, seqnames %in% c("chr1", "chr2"))
+```
+
+**Genomic annotations**
+
+In Bioconductor there are a number of 'Annotation data' packages. An example is the TxDb family of packages. These packages contain information on the genomic coordinates of exons, genes, transcripts, etc. Attach the TxDb package corresponding to the _Homo sapiens_ hg19 genome build using the UCSC 'knownGene' track.
+
+```{r, message=FALSE}
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+```
+
+Extract the coordinates of all genes
+
+```{r, message = FALSE}
+gn <- genes(TxDb.Hsapiens.UCSC.hg19.knownGene)
+gn
+gn <- sort(gn)
+gn
+```
+
+**Overlaps**
+
+A very useful operation is to count overlaps in two distinct genomic ranges objects. The following counts the number of copy number alterations that overlap each gene. 
+
+```{r}
+olaps <- countOverlaps(gn, scna)
+length(olaps)     # 1 count per gene
+table(olaps)
+```
+
+Calculations such as `countOverlaps()` can be added to the `GRanges` object, tightly coupling derived data with the original annotation.
+
+```{r}
+gn$scnaOverlaps <- countOverlaps(gn, scna)
+gn
+```
+
+It is then possible to perform coordinated actions, e.g., subsetting the `GRanges` objects for genes satisfying particular conditions, in a coordinated fashion where the software does all the book-keeping to makes sure the correct ranges are selected.
+
+```{r}
+subset(gn, scnaOverlaps > 0)
+```
+
+Can you think of other situations where one might want to calculate overlaps and couple these with `GRanges`?
+
+**Exercise**
+
+What is the maximum number of exons per transcript on chromosome 1 of the hg38 
+genome assembly?
+
+Hints:
+
+1. The `exons` function extracts exon coordinates from a TxDb object. 
+2. The `exons` function has an argument `columns` that can be used to obtain the
+transcript ID (`tx_id`) and/or transcript name (`tx_name`) for each exon.
+
+[Top transcript by annotations](https://useast.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;g=ENSG00000162825;r=1:145290005-145425603;t=ENST00000698833)
+
+We'll need to load in the assembly
+
+```{r}
+library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+```
+
+
+Perhaps the simplest overlap-based operation is `subsetByOverlaps()`,
+which extracts the elements in the query (the first argument) that
+overlap at least one element in the subject (the second).
+
+```{r subsetByOverlaps}
+subsetByOverlaps(gn, scna)
+```
+
+In every call to an overlap operation in two sets of _stranded_ genomic ranges,
+it is necessary to specify `ignore.strand = TRUE`, except in rare cases when we
+do not want ranges on opposite strands to be considered overlapping.
+
+**Exercise**
+
+We consider the collection of CpG islands in the human genome described
+in [Wu et al., 2010](https://doi.org/10.1093/biostatistics/kxq005). 
+Let's import the collection of CpG islands from
+[here](http://www.haowulab.org/software/makeCGI/model-based-cpg-islands-hg19.txt)
+as a `GRanges`. 
+
+```{r}
+cpg <- read.delim("http://www.haowulab.org/software/makeCGI/model-based-cpg-islands-hg19.txt")
+cpg <- makeGRangesFromDataFrame(cpg, keep.extra.columns = TRUE)
+genome(cpg) <- "hg19"
+cpg <- sort(cpg)
+cpg
+```
+
+We also will need the set of promotor regions in *hg19*
+
+```{r}
+proms <- rtracklayer::import("../data/hg19proms.bed")
+genome(proms) <- "hg19"
+proms
+```
+
+
+# Accessing genomic annotations
+
+```{r}
+rpkm_data <- read.csv("../data/counts.rpkm")
+metadata <- read.csv(file="../data/mouse_exp_design.csv")
+```
+
+Let's convert these ensembl ID's into gene symbols. There are a number of ways to do this in R, but we will be using the `biomaRt` package. [BiomaRt](https://useast.ensembl.org/info/data/biomart/biomart_r_package.html) lets us easily map a variety of biological identifiers and choose a data source or 'mart'. We can see a list of available dataset.
+
+```{r}
+library(biomaRt, quietly = TRUE)
+listEnsembl()
+# For a reproducible analysis, it's good to always specify versions of databases
+ensembl = useEnsembl(biomart="ensembl",version=109)
+listDatasets(ensembl)[100:110,]
+```
+
+We want to convert ensembl gene ID's into MGI gene symbols. We can use the `getBM` function to get a dataframe of our mapped identifiers.
+
+```{r}
+ensembl = useEnsembl(biomart="ensembl", dataset="mmusculus_gene_ensembl")
+gene_map <- getBM(filters= "ensembl_gene_id", attributes= c("ensembl_gene_id","mgi_symbol"), values = rownames(rpkm_data), mart=ensembl)
+```
+
+
+1.  Try to replace the current rownames in `rpkm_data` with their mapped gene symbol. You may need to add a new column with the data instead.
+
+2.  Use the `match()` function to subset the `metadata` data frame so that the row names of the `metadata` data frame match the column names of the `rpkm_data` data frame.
+
+
+We can use the `listAttributes()` and `listFilters()` functions to see what other information we can get using `getBM`. 
+
+Let's use `getBM` to find all genes on chromosomes 2, 6, or  and create another dataframe only containing these genes.
+
+```{r}
+#Get the chomosome annotations
+chrom_map <- getBM(filters= "ensembl_gene_id", attributes= c("ensembl_gene_id","chromosome_name"), values = rownames(rpkm_data), mart=ensembl)
+
+#not strictly needed, but let's make chromosome a factor
+chrom_map$chromosome_name <- factor(chrom_map$chromosome_name)
+
+#We could either first map to rpkm_data and then filter, or filter chrom_map and then map to rpkm_data. Let's do the latter. 
+chrom_map_269 <- chrom_map[chrom_map$chromosome_name %in% c("2","6","9"),]
+rpkm_chrom29 <- rpkm_data[rownames(rpkm_data) %in% chrom_map_269$ensembl_gene_id,]
+```
