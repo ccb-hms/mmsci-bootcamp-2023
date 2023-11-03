@@ -161,11 +161,149 @@ We can see from `summary` that one of the interaction effects is significant. He
 interaction.plot(x.factor = dat$time, trace.factor = dat$treatment, response = dat$expression)
 ```
 
+# Dimensionality Reduction
+
+## PCA
+
+Load in the data `phospho_exp2_safe.csv` and `phospho_exp2_safe.csv`.
+
+There are two variables of interest, the time, 0, 5, or 60 minutes post-infection, and the genotype, WT, NPC1 knockout and RAB7A knockout.
+
+Unfortunately, all of this data is embedded in the column names of the dataset.
+
+Create a `metadata_plex#` dataframes to contain this data instead. You can try to do this programatically from the column names, or you can type out the data manually.
+
+::: {.callout-tip icon="false" collapse="true"}
+## Solution
+
+```{r}
+#First we load the data normally
+
+plex2_data <- read.csv("../data/phospho_exp2_safe.csv")
+plex3_data <- read.csv("../data/phospho_exp3_safe.csv")
+
+#We'll use the stringr library to split up the column names
+library(stringr, quietly = TRUE)
+
+make_metadata <- function(in_names){
+  split_names <- str_split_fixed(in_names, "_", 3)
+  metadata <- data.frame(split_names)
+  #paste0 lets us concatenate strings
+  rownames(metadata) <- paste0('sample', rownames(metadata))
+  colnames(metadata) <- c("condition","time","replicate")
+  metadata$condition <- factor(metadata$condition)
+  metadata$time <- factor(metadata$time, levels = c("0Min","5Min","60Min"))
+  return(metadata)
+}
+
+metadata_plex2 <- make_metadata(colnames(plex2_data[,6:15]))
+metadata_plex3 <- make_metadata(colnames(plex3_data[,6:15]))
+
+colnames(plex2_data)[6:15] <- rownames(metadata_plex2)
+colnames(plex3_data)[6:15] <- rownames(metadata_plex3)
+```
+:::
+
+## PCA
+
+As an initial quality check, let's run PCA on our data. We can use `prcomp` to run pca, and `autoplot` to plot the result. Let's try making 2 pca plots, 1 for each 10plex. We can set the color equal to the genotype and the shape of the points equal to the time.
+
+You can call `prcomp` and `autoplot` like this:
+
+
+*Note: `prcomp` might be expecting data in a wide format as opposed to a long format, meaning that we need to make each peptide a column and each row a sample. We can use the t() function and convert the result to a dataframe to get our data into this format.*
+
+*Note: You may need to set the `scale` parameter to `FALSE` to avoid an error in `prcomp`.*
+
+We should look at how our replicates are clustered. Does everything look good in both 10-plexes?
+
+We need to transpose the numeric parts of the data in order to run PCA on it.
+
+```{r}
+library(ggfortify)
+pca_res2 <- prcomp(t(plex2_data[,6:15]), scale = FALSE)
+autoplot(pca_res2, data=metadata_plex2, colour = 'condition', shape='time', size=3)
+
+pca_res3 <- prcomp(t(plex3_data[,6:15]), scale = FALSE)
+autoplot(pca_res3, data=metadata_plex3, colour = 'condition', shape='time', size=3)
+```
+
+At first glance, both plots look messy. However, when interpreting a PCA plot is important to note how much variance is explained by each principle component. On both of these, the 1st PC explains over 80% of the variance, while the second less than 10%. Thus, we care much more (as in 8 times more) about the X axis than the Y axis.
+
+In both plots, we see much stronger time point clustering than condition clustering, given how muchn more important the horizontal axis is. However, in plex3 there is one 60 minute point with the 0 minute points, and vice versa.
+
+
+## Heatmaps
+
+Let's explore this more by looking at some heatmaps of our data. We can use the `heatmap` function to plot a heatmap of the correlation between each of the samples in each 10plex.
+
+Below is how to calculate the correlation and call the `heatmap` function. You can try to use the `RowSideColors` argument or change the column names to improve the visualization.
+
+*Note: `heatmap` only accepts numeric columns.*
+
+Is there anything unexpected in how the samples have clustered here?
+
+```{r}
+heatmap(x=cor(plex2_data[,6:15]))
+heatmap(x=cor(plex3_data[,6:15]))
+```
+
+At first glance our heatmaps look alright, but that is because they have been clustered automatically by the heatmap function. We can tell heatmap not to cluster to see things better or use the `RowSideColors` argument.
+
+Not clustering:
+
+```{r}
+heatmap(x=cor(plex2_data[,6:15]), Rowv=NA, Colv=NA)
+heatmap(x=cor(plex3_data[,6:15]), Rowv=NA, Colv=NA)
+```
+
+Using `RowSideColors`:
+
+```{r}
+library(RColorBrewer)
+colSide2 <- brewer.pal(3, "Set1")[metadata_plex2$time]
+heatmap(x=cor(plex2_data[,6:15]), RowSideColors = colSide2)
+colSide3 <- brewer.pal(3, "Set1")[metadata_plex3$time]
+heatmap(x=cor(plex3_data[,6:15]), RowSideColors = colSide3)
+```
+
+In both versions we clearly see a single sample in plex 3 looking to be out of place.
+
+::: {.callout-tip icon="false" collapse="true"}
+## Exercise:
+
+What do you think the label-swap was in this situation? Would you feel comfortable resolving it, or do you think you would need to redo the experiment?
+
+:::
+
+::: {.callout-tip icon="false" collapse="true"}
+## Solution
+
+There are a number of 'correct' answers here. It makes sense to redo the experiment, gain more biological context/knowledge, try to construct a statistical test, or other directions.
+
+In reality, we ultimately determined that there was a label swap between samples 3 and 5 in 10plex 3. This was based on the irregular time series clustering, and that it appeared that time series clustering was significantly stronger than condition clustering. For the real experiment we also had a third 10plex with a slightly different design and corresponding proteomic measurements for all 3 10plexes which we could confirm the clustering patterns with.
+
+**However, we also were okay correcting this swap and moving forward because this was for an exploratory analysis.** We ultimately were using this data to generate hypothesis and perform targeted experiments based on what seemed unusual. Thus, it wasn't the end of the world if a label swap slipped through, since we were not drawing any concrete conclusions from the data. If this had been a final experiment testing a specific hypothesis, we would have redone it.
+:::
+
+## TSNE and UMAP
+
+```{r}
+library(umap)
+
+ump <- umap(t(plex2_data[,6:15]), n_neighbors = 4, random_state = 123)
+
+plex2.umap <- metadata_plex2
+plex2.umap$x <- ump$layout[,1]
+plex2.umap$y <- ump$layout[,2]
+
+ggplot(data = plex2.umap, aes(x=x, y=y, color=condition, shape=time)) + geom_point()
+```
+
+
 # Multiple Hypothesis Testing
 
 Let's think about a simple coin tossing example. How do we know whether or not a coin that we're tossing is fait? Let's suppose we start looking at different test statistics. Perhaps the number of consecutive series of 3 or more heads. Or the number of heads in the first 50 coin flips. And so on. A t some point we will find a test that happens to result in a small p-value, even if just by chance (after all, the probability for the p-value to be less than 0.05 under the null hypothesis---fair coin---is one in twenty).
-
-There is a [xkcd comic](http://xkcd.com/882) which illustrates this issue in the context of selective reporting. We just did what is called p-value hacking. You see what the problem is: in our zeal to prove our point we tortured the data until some statistic did what we wanted. A related tactic is hypothesis switching or HARKing -- hypothesizing after the results are known: we have a dataset, maybe we have invested a lot of time and money into assembling it, so we need results. We come up with lots of different null hypotheses and test statistics, test them, and iterate, until we can report something.
 
 ```{r}
 #| echo: false
@@ -173,7 +311,7 @@ There is a [xkcd comic](http://xkcd.com/882) which illustrates this issue in the
 library("tidyverse")
 ```
 
-Let's try running our binomial test on a fair coin, and see what we get:
+Let's try running a binomial test on a fair coin, and see what we get:
 
 ```{r}
 numFlips = 100
@@ -209,45 +347,9 @@ There are a number of methods for transforming p values to correct for multiple 
 
 It is important to keep in mind that the transformed thresholds or p values (often called q values) resulting from a multiple hypothesis correction are **no longer p values**. They are now useful for choosing whether or not to reject the null hypothesis, but cannot be directly interpreted as the probability of seeing a result this extreme under the null hypothesis. Another important note is that the methods we will see here **assume that all hypotheses are independent**.
 
-## Definitions
-
-Let's redefine our error table from earlier, in the framework of multiple hypotheses. Thus, each of the following variables represents a count out of the total number of tests performed.
-
-| Test vs reality | Null is true | Null is false | Total   |
-|-----------------|--------------|---------------|---------|
-| Rejected        | $V$          | $S$           | $R$     |
-| Not Rejected    | $U$          | $T$           | $m - R$ |
-| Total           | $m_0$        | $m-m_0$       | $m$     |
-
--   $m$: total number of tests (and null hypotheses)
-
--   $m_0$: number of true null hypotheses
-
--   $m - m_0$: number of false null hypotheses
-
--   $V$: number of false positives (a measure of type I error)
-
--   $T$: number of false negatives (a measure of type II error)
-
--   $S, U$: number of true positives and true negatives
-
--   $R$: number of rejections
-
-## Family wise error rate
-
-The **family wise error rate** (FWER) is the probability that \$V\>0\$, i.e., that we make one or more false positive errors.
-
-We can compute it as the complement of making no false positive errors at all. Recall that $\alpha$ is our probability threshold for rejecting the null hypothesis.
-
-$$
-P(V>0) = 1 - P(V=0) = 1 - (1-\alpha)^{m_0}
-$$
-
-Note that, as $m_0$ approaches $\infty$, the FWER approaches 1. In other words, with enough tests we are guaranteed to have at least 1 false positive.
-
 ## Bonferroni method
 
-The Bonferroni method uses the FWER to adjust $\alpha$ such that we can choose a false positive rate across all tests. In other words, to control the FWER to the level $\alpha_{FWER}$ a new threshold is chosen, $\alpha = \alpha_{FWER}/m$.
+The Bonferroni method adjusts p-values so that we can get a particular guarantee, such as having a $5\%$ chance of getting a result that extreme for a single tests, across multiple tests. In other words, to control the family-wise error rate (FWER) $\alpha_{FWER}$ a new threshold is chosen, $\alpha = \alpha_{FWER}/m$.
 
 This means that, for $10000$ tests, to set $alpha_{FWER} = 0.05$ our new p value threshold for individual tests would be $5 \times 10{-6}$. Often FWER control is too conservative, and would lead to an ineffective use of the time and money that was spent to generate and assemble the data.
 
@@ -336,155 +438,3 @@ p.adjust(awde$pvalue, method="bonferroni")
 p.adjust(awde$pvalue, method="BH")
 ```
 
-# Dimensionality Reduction
-
-## PCA
-
-Load in the data `phospho_exp2_safe.csv` and `phospho_exp2_safe.csv`.
-
-There are two variables of interest, the time, 0, 5, or 60 minutes post-infection, and the genotype, WT, NPC1 knockout and RAB7A knockout.
-
-Unfortunately, all of this data is embedded in the column names of the dataset.
-
-Create a `metadata_plex#` dataframes to contain this data instead. You can try to do this programatically from the column names, or you can type out the data manually.
-
-::: {.callout-tip icon="false" collapse="true"}
-## Solution
-
-```{r}
-#First we load the data normally
-
-plex2_data <- read.csv("../data/phospho_exp2_safe.csv")
-plex3_data <- read.csv("../data/phospho_exp3_safe.csv")
-
-#We'll use the stringr library to split up the column names
-library(stringr, quietly = TRUE)
-
-make_metadata <- function(in_names){
-  split_names <- str_split_fixed(in_names, "_", 3)
-  metadata <- data.frame(split_names)
-  #paste0 lets us concatenate strings
-  rownames(metadata) <- paste0('sample', rownames(metadata))
-  colnames(metadata) <- c("condition","time","replicate")
-  metadata$condition <- factor(metadata$condition)
-  metadata$time <- factor(metadata$time, levels = c("0Min","5Min","60Min"))
-  return(metadata)
-}
-
-metadata_plex2 <- make_metadata(colnames(plex2_data[,6:15]))
-metadata_plex3 <- make_metadata(colnames(plex3_data[,6:15]))
-
-colnames(plex2_data)[6:15] <- rownames(metadata_plex2)
-colnames(plex3_data)[6:15] <- rownames(metadata_plex3)
-```
-:::
-
-## PCA
-
-As an initial quality check, let's run PCA on our data. We can use `prcomp` to run pca, and `autoplot` to plot the result. Let's try making 2 pca plots, 1 for each 10plex. We can set the color equal to the genotype and the shape of the points equal to the time.
-
-You can call `prcomp` and `autoplot` like this:
-
-    library(ggfortify)
-    #PCA Plots
-    pca_res2 <- prcomp(plex2_data, scale = FALSE)
-    autoplot(pca_res2, data=metadata_plex2, colour = 'condition', shape='time', size=3)
-
-*Hint: `prcomp` might be expecting data in a wide format as opposed to a long format, meaning that we need to make each peptide a column and each row a sample. We can use the t() function and convert the result to a dataframe to get our data into this format.*
-
-*Note: You may need to set the `scale` parameter to `FALSE` to avoid an error in `prcomp`.*
-
-We should look at how our replicates are clustered. Does everything look good in both 10-plexes?
-
-::: {.callout-tip icon="false" collapse="true"}
-## Solution
-
-We need to transpose the numeric parts of the data in order to run PCA on it.
-
-```{r}
-library(ggfortify)
-pca_res2 <- prcomp(t(plex2_data[,6:15]), scale = FALSE)
-autoplot(pca_res2, data=metadata_plex2, colour = 'condition', shape='time', size=3)
-
-pca_res3 <- prcomp(t(plex3_data[,6:15]), scale = FALSE)
-autoplot(pca_res3, data=metadata_plex3, colour = 'condition', shape='time', size=3)
-```
-
-At first glance, both plots look messy. However, when interpreting a PCA plot is important to note how much variance is explained by each principle component. On both of these, the 1st PC explains over 80% of the variance, while the second less than 10%. Thus, we care much more (as in 8 times more) about the X axis than the Y axis.
-
-In both plots, we see much stronger time point clustering than condition clustering, given how muchn more important the horizontal axis is. However, in plex3 there is one 60 minute point with the 0 minute points, and vice versa.
-:::
-
-## Heatmaps
-
-Let's explore this more by looking at some heatmaps of our data. We can use the `heatmap` function to plot a heatmap of the correlation between each of the samples in each 10plex.
-
-Below is how to calculate the correlation and call the `heatmap` function. You can try to use the `RowSideColors` argument or change the column names to improve the visualization.
-
-    heatmap(x=cor(plex2_data))
-
-*Hint: `heatmap` only accepts numeric columns.*
-
-Is there anything unexpected in how the samples have clustered here?
-
-::: {.callout-tip icon="false" collapse="true"}
-## Solution
-
-```{r}
-heatmap(x=cor(plex2_data[,6:15]))
-heatmap(x=cor(plex3_data[,6:15]))
-```
-
-At first glance our heatmaps look alright, but that is because they have been clustered automatically by the heatmap function. We can tell heatmap not to cluster to see things better or use the `RowSideColors` argument.
-
-Not clustering:
-
-```{r}
-heatmap(x=cor(plex2_data[,6:15]), Rowv=NA, Colv=NA)
-heatmap(x=cor(plex3_data[,6:15]), Rowv=NA, Colv=NA)
-```
-
-Using `RowSideColors`:
-
-```{r}
-library(RColorBrewer)
-colSide2 <- brewer.pal(3, "Set1")[metadata_plex2$time]
-heatmap(x=cor(plex2_data[,6:15]), RowSideColors = colSide2)
-colSide3 <- brewer.pal(3, "Set1")[metadata_plex3$time]
-heatmap(x=cor(plex3_data[,6:15]), RowSideColors = colSide3)
-```
-
-In both versions we clearly see a single sample in plex 3 looking to be out of place.
-:::
-
-## Resolving the issue
-
-Decide what to do about the potential label swap and explain your reasoning. You could declare there to be too much uncertainty and report to your collaborator that they will have to redo the experiment, decide there is no label swap, or correct a label swap and continue the analysis.
-
-Do you feel confident enough to continue the analysis, or is there too much uncertainty to use this data? What other factors might influence your decision?
-
-If there is additional analysis you want to perform or calculations you want to make to support your answer, feel free to do so. If you are unsure how to perform that analysis or it would be outside the scope of a problem set, instead describe what you would do and how you would use the results.
-
-::: {.callout-tip icon="false" collapse="true"}
-## Solution
-
-There are a number of 'correct' answers here. It makes sense to redo the experiment, gain more biological context/knowledge, try to construct a statistical test, or other directions.
-
-In reality, we ultimately determined that there was a label swap between samples 3 and 5 in 10plex 3. This was based on the irregular time series clustering, and that it appeared that time series clustering was significantly stronger than condition clustering. For the real experiment we also had a third 10plex with a slightly different design and corresponding proteomic measurements for all 3 10plexes which we could confirm the clustering patterns with.
-
-**However, we also were okay correcting this swap and moving forward because this was for an exploratory analysis.** We ultimately were using this data to generate hypothesis and perform targeted experiments based on what seemed unusual. Thus, it wasn't the end of the world if a label swap slipped through, since we were not drawing any concrete conclusions from the data. If this had been a final experiment testing a specific hypothesis, we would have redone it.
-:::
-
-## TSNE and UMAP
-
-```{r}
-library(umap)
-
-ump <- umap(t(plex2_data[,6:15]), n_neighbors = 4, random_state = 123)
-
-plex2.umap <- metadata_plex2
-plex2.umap$x <- ump$layout[,1]
-plex2.umap$y <- ump$layout[,2]
-
-ggplot(data = plex2.umap, aes(x=x, y=y, color=condition, shape=time)) + geom_point()
-```
