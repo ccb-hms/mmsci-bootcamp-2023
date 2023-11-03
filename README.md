@@ -1,4 +1,4 @@
-# Systems Immunology Bootcamp
+# MMSCI Bootcamp
 Materials for Introduction to R bootcamp
 
 # Compile Instructions
