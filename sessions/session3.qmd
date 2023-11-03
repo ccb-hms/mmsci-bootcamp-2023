@@ -1,0 +1,440 @@
+---
+title: "Session 3: Modeling"
+format: html
+---
+
+# Data
+
+# Review: Modeling
+
+## Single and multiple regression
+
+R uses the function `lm` to fit linear models.
+
+Read in 'lm_example_data.csv`:
+
+```{r}
+dat <- read.csv("https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2018-September-Bioinformatics-Prerequisites/master/friday/lm_example_data.csv")
+head(dat)
+str(dat)
+```
+
+Fit a linear model using `expression` as the outcome and `treatment` as a categorical covariate. In R model syntax, the outcome is on the left side, with covariates (separated by `+`) following the `~`:
+
+```{r}
+oneway.model <- lm(expression ~ treatment, data = dat)
+```
+
+Note that this the same as the continuous linear model we saw earlier. 
+R notices that `treatment` is a factor and handles the rest for us.
+
+```{r}
+oneway.model
+class(oneway.model)
+```
+
+We can look at the design matrix:
+
+```{r}
+X <- model.matrix(~treatment, data = dat)
+X
+```
+
+Note that this is a one-way ANOVA model.
+
+`summary()` applied to an `lm` object will give p-values and other relevant information:
+
+```{r}
+summary(oneway.model)
+```
+
+In the output:
+
+-   "Coefficients" refer to the $\beta$'s
+-   "Estimate" is the estimate of each coefficient
+-   "Std. Error" is the standard error of the estimate
+-   "t value" is the coefficient divided by its standard error
+-   "Pr(\>\|t\|)" is the p-value for the coefficient
+-   The residual standard error is the estimate of the variance of $\epsilon$
+-   Degrees of freedom is the sample size minus \# of coefficients estimated
+-   R-squared is (roughly) the proportion of variance in the outcome explained by the model
+-   The F-statistic compares the fit of the model *as a whole* to the null model (with no covariates)
+
+`coef()` gives you model coefficients:
+
+```{r}
+coef(oneway.model)
+```
+
+What do the model coefficients mean?
+
+By default, R uses reference group coding or "treatment contrasts". For categorical covariates, the first level alphabetically (or first factor level) is treated as the reference group. The reference group doesn't get its own coefficient, it is represented by the intercept. Coefficients for other groups are the difference from the reference:
+
+For our simple design:
+
+-   `(Intercept)` is the mean of expression for treatment = A
+-   `treatmentB` is the mean of expression for treatment = B minus the mean for treatment = A
+-   `treatmentC` is the mean of expression for treatment = C minus the mean for treatment = A
+-   etc.
+
+```{r}
+# Get means in each treatment
+treatmentmeans <- tapply(dat$expression, dat$treatment, mean)
+treatmentmeans["A"] 
+# Difference in means gives you the "treatmentB" coefficient from oneway.model
+treatmentmeans["B"] - treatmentmeans["A"] 
+```
+
+What if you don't want reference group coding? Another option is to fit a model without an intercept:
+
+```{r}
+no.intercept.model <- lm(expression ~ 0 + treatment, data = dat) # '0' means 'no intercept' here
+summary(no.intercept.model)
+coef(no.intercept.model)
+```
+
+Without the intercept, the coefficients here estimate the mean in each level of treatment:
+
+```{r}
+treatmentmeans
+```
+
+The no-intercept model is the SAME model as the reference group coded model, in the sense that it gives the same estimate for any comparison between groups:
+
+Treatment B - treatment A, reference group coded model:
+
+```{r}
+coefs <- coef(oneway.model)
+coefs["treatmentB"]
+```
+
+Treatment B - treatment A, no-intercept model:
+
+```{r}
+coefs <- coef(no.intercept.model)
+coefs["treatmentB"] - coefs["treatmentA"]
+```
+
+### Batch Adjustment
+
+Suppose we want to adjust for batch differences in our model. We do this by adding the covariate "batch" to the model formula:
+
+```{r}
+batch.model <- lm(expression ~ treatment + batch, data = dat)
+summary(batch.model)
+coef(batch.model)
+```
+
+For a model with more than one coefficient, `summary` provides estimates and tests for each coefficient adjusted for all the other coefficients in the model.
+
+### Two-factor analysis
+
+Suppose our experiment involves two factors, treatment and time. `lm` can be used to fit a two-way ANOVA model:
+
+```{r}
+twoway.model <- lm(expression ~ treatment*time, data = dat)
+summary(twoway.model)
+coef(twoway.model)
+```
+
+The notation `treatment*time` refers to treatment, time, and the interaction effect of treatment by time.
+
+Interpretation of coefficients:
+
+-   Each coefficient for treatment represents the difference between the indicated group and the reference group *at the reference level for the other covariates*
+-   For example, "treatmentB" is the difference in expression between treatment B and treatment A at time 1
+-   Similarly, "timetime2" is the difference in expression between time2 and time1 for treatment A
+-   The interaction effects (coefficients with ":") estimate the difference between treatment groups in the effect of time
+-   The interaction effects ALSO estimate the difference between times in the effect of treatment
+
+To estimate the difference between treatment B and treatment A at time 2, we need to include the interaction effects:
+
+```{r}
+# A - B at time 2
+coefs <- coef(twoway.model)
+coefs["treatmentB"] + coefs["treatmentB:timetime2"]
+```
+
+We can see from `summary` that one of the interaction effects is significant. Here's what that interaction effect looks like graphically:
+
+```{r}
+interaction.plot(x.factor = dat$time, trace.factor = dat$treatment, response = dat$expression)
+```
+
+# Dimensionality Reduction
+
+## PCA
+
+Load in the data `phospho_exp2_safe.csv` and `phospho_exp2_safe.csv`.
+
+There are two variables of interest, the time, 0, 5, or 60 minutes post-infection, and the genotype, WT, NPC1 knockout and RAB7A knockout.
+
+Unfortunately, all of this data is embedded in the column names of the dataset.
+
+Create a `metadata_plex#` dataframes to contain this data instead. You can try to do this programatically from the column names, or you can type out the data manually.
+
+::: {.callout-tip icon="false" collapse="true"}
+## Solution
+
+```{r}
+#First we load the data normally
+
+plex2_data <- read.csv("../data/phospho_exp2_safe.csv")
+plex3_data <- read.csv("../data/phospho_exp3_safe.csv")
+
+#We'll use the stringr library to split up the column names
+library(stringr, quietly = TRUE)
+
+make_metadata <- function(in_names){
+  split_names <- str_split_fixed(in_names, "_", 3)
+  metadata <- data.frame(split_names)
+  #paste0 lets us concatenate strings
+  rownames(metadata) <- paste0('sample', rownames(metadata))
+  colnames(metadata) <- c("condition","time","replicate")
+  metadata$condition <- factor(metadata$condition)
+  metadata$time <- factor(metadata$time, levels = c("0Min","5Min","60Min"))
+  return(metadata)
+}
+
+metadata_plex2 <- make_metadata(colnames(plex2_data[,6:15]))
+metadata_plex3 <- make_metadata(colnames(plex3_data[,6:15]))
+
+colnames(plex2_data)[6:15] <- rownames(metadata_plex2)
+colnames(plex3_data)[6:15] <- rownames(metadata_plex3)
+```
+:::
+
+## PCA
+
+As an initial quality check, let's run PCA on our data. We can use `prcomp` to run pca, and `autoplot` to plot the result. Let's try making 2 pca plots, 1 for each 10plex. We can set the color equal to the genotype and the shape of the points equal to the time.
+
+You can call `prcomp` and `autoplot` like this:
+
+
+*Note: `prcomp` might be expecting data in a wide format as opposed to a long format, meaning that we need to make each peptide a column and each row a sample. We can use the t() function and convert the result to a dataframe to get our data into this format.*
+
+*Note: You may need to set the `scale` parameter to `FALSE` to avoid an error in `prcomp`.*
+
+We should look at how our replicates are clustered. Does everything look good in both 10-plexes?
+
+We need to transpose the numeric parts of the data in order to run PCA on it.
+
+```{r}
+library(ggfortify)
+pca_res2 <- prcomp(t(plex2_data[,6:15]), scale = FALSE)
+autoplot(pca_res2, data=metadata_plex2, colour = 'condition', shape='time', size=3)
+
+pca_res3 <- prcomp(t(plex3_data[,6:15]), scale = FALSE)
+autoplot(pca_res3, data=metadata_plex3, colour = 'condition', shape='time', size=3)
+```
+
+At first glance, both plots look messy. However, when interpreting a PCA plot is important to note how much variance is explained by each principle component. On both of these, the 1st PC explains over 80% of the variance, while the second less than 10%. Thus, we care much more (as in 8 times more) about the X axis than the Y axis.
+
+In both plots, we see much stronger time point clustering than condition clustering, given how muchn more important the horizontal axis is. However, in plex3 there is one 60 minute point with the 0 minute points, and vice versa.
+
+
+## Heatmaps
+
+Let's explore this more by looking at some heatmaps of our data. We can use the `heatmap` function to plot a heatmap of the correlation between each of the samples in each 10plex.
+
+Below is how to calculate the correlation and call the `heatmap` function. You can try to use the `RowSideColors` argument or change the column names to improve the visualization.
+
+*Note: `heatmap` only accepts numeric columns.*
+
+Is there anything unexpected in how the samples have clustered here?
+
+```{r}
+heatmap(x=cor(plex2_data[,6:15]))
+heatmap(x=cor(plex3_data[,6:15]))
+```
+
+At first glance our heatmaps look alright, but that is because they have been clustered automatically by the heatmap function. We can tell heatmap not to cluster to see things better or use the `RowSideColors` argument.
+
+Not clustering:
+
+```{r}
+heatmap(x=cor(plex2_data[,6:15]), Rowv=NA, Colv=NA)
+heatmap(x=cor(plex3_data[,6:15]), Rowv=NA, Colv=NA)
+```
+
+Using `RowSideColors`:
+
+```{r}
+library(RColorBrewer)
+colSide2 <- brewer.pal(3, "Set1")[metadata_plex2$time]
+heatmap(x=cor(plex2_data[,6:15]), RowSideColors = colSide2)
+colSide3 <- brewer.pal(3, "Set1")[metadata_plex3$time]
+heatmap(x=cor(plex3_data[,6:15]), RowSideColors = colSide3)
+```
+
+In both versions we clearly see a single sample in plex 3 looking to be out of place.
+
+::: {.callout-tip icon="false" collapse="true"}
+## Exercise:
+
+What do you think the label-swap was in this situation? Would you feel comfortable resolving it, or do you think you would need to redo the experiment?
+
+:::
+
+::: {.callout-tip icon="false" collapse="true"}
+## Solution
+
+There are a number of 'correct' answers here. It makes sense to redo the experiment, gain more biological context/knowledge, try to construct a statistical test, or other directions.
+
+In reality, we ultimately determined that there was a label swap between samples 3 and 5 in 10plex 3. This was based on the irregular time series clustering, and that it appeared that time series clustering was significantly stronger than condition clustering. For the real experiment we also had a third 10plex with a slightly different design and corresponding proteomic measurements for all 3 10plexes which we could confirm the clustering patterns with.
+
+**However, we also were okay correcting this swap and moving forward because this was for an exploratory analysis.** We ultimately were using this data to generate hypothesis and perform targeted experiments based on what seemed unusual. Thus, it wasn't the end of the world if a label swap slipped through, since we were not drawing any concrete conclusions from the data. If this had been a final experiment testing a specific hypothesis, we would have redone it.
+:::
+
+## TSNE and UMAP
+
+```{r}
+library(umap)
+
+ump <- umap(t(plex2_data[,6:15]), n_neighbors = 4, random_state = 123)
+
+plex2.umap <- metadata_plex2
+plex2.umap$x <- ump$layout[,1]
+plex2.umap$y <- ump$layout[,2]
+
+ggplot(data = plex2.umap, aes(x=x, y=y, color=condition, shape=time)) + geom_point()
+```
+
+
+# Multiple Hypothesis Testing
+
+Let's think about a simple coin tossing example. How do we know whether or not a coin that we're tossing is fait? Let's suppose we start looking at different test statistics. Perhaps the number of consecutive series of 3 or more heads. Or the number of heads in the first 50 coin flips. And so on. A t some point we will find a test that happens to result in a small p-value, even if just by chance (after all, the probability for the p-value to be less than 0.05 under the null hypothesis---fair coin---is one in twenty).
+
+```{r}
+#| echo: false
+#| output: false
+library("tidyverse")
+```
+
+Let's try running a binomial test on a fair coin, and see what we get:
+
+```{r}
+numFlips = 100
+probHead = 0.5
+coinFlips = sample(c("H", "T"), size = numFlips,
+  replace = TRUE, prob = c(probHead, 1 - probHead))
+numHeads <- sum(coinFlips == "H")
+pval <- binom.test(x = numHeads, n = numFlips, p = 0.5)$p.value
+pval
+```
+
+This p value is probably relatively large. But what if we keep on repeating the experiment?
+
+```{r}
+#Let's make a function for performing our experiment
+flip_coin <- function(numFlips, probHead){
+  numFlips = 100
+  probHead = 0.50
+  coinFlips = sample(c("H", "T"), size = numFlips,
+    replace = TRUE, prob = c(probHead, 1 - probHead))
+  numHeads <- sum(coinFlips == "H")
+  pval <- binom.test(x = numHeads, n = numFlips, p = 0.5)$p.value
+  return(pval)
+}
+
+#And then run it 10000 times
+parray <- replicate(10000, flip_coin(1000, 0.5), simplify=TRUE)
+hist(parray, breaks=100)
+min(parray)
+```
+
+There are a number of methods for transforming p values to correct for multiple hypotheses. These methods can vary greatly in how conservative they are. Most methods are test agnostic, and are performed separately after the hypothesis test is performed.
+
+It is important to keep in mind that the transformed thresholds or p values (often called q values) resulting from a multiple hypothesis correction are **no longer p values**. They are now useful for choosing whether or not to reject the null hypothesis, but cannot be directly interpreted as the probability of seeing a result this extreme under the null hypothesis. Another important note is that the methods we will see here **assume that all hypotheses are independent**.
+
+## Bonferroni method
+
+The Bonferroni method adjusts p-values so that we can get a particular guarantee, such as having a $5\%$ chance of getting a result that extreme for a single tests, across multiple tests. In other words, to control the family-wise error rate (FWER) $\alpha_{FWER}$ a new threshold is chosen, $\alpha = \alpha_{FWER}/m$.
+
+This means that, for $10000$ tests, to set $alpha_{FWER} = 0.05$ our new p value threshold for individual tests would be $5 \times 10{-6}$. Often FWER control is too conservative, and would lead to an ineffective use of the time and money that was spent to generate and assemble the data.
+
+## False discovery rate
+
+The false discovery rate takes a more relaxed approach than Bonferroni correction. Instead of trying to have no or a fixed total rate of false positives, what if we allowed a small proportion of our null hypothesis rejections to be false positives?
+
+It uses the total number of null hypotheses rejected to inform what is an acceptable number of false positive errors to let through. It makes the claim that, for instance, making $4$ type I errors out of $10$ rejected null hypotheses is a worse error than making $20$ type I errors out of $100$ rejected null hypotheses.
+
+To see an example, we will load up the RNA-Seq dataset airway, which contains gene expression measurements (gene-level counts) of four primary human airway smooth muscle cell lines with and without treatment with dexamethasone, a synthetic glucocorticoid.
+
+Conceptually, the tested null hypothesis is similar to that of the t-test, although the details are slightly more involved since we are dealing with count data.
+
+```{r}
+#| output: false
+library("DESeq2")
+library("airway")
+library("tidyverse")
+data("airway")
+aw   = DESeqDataSet(se = airway, design = ~ cell + dex)
+aw   = DESeq(aw)
+# This next line filters out NA p values from the dataset
+awde = as.data.frame(results(aw)) |> dplyr::filter(!is.na(pvalue))
+```
+
+In this dataset, we have performed a statistical test for each of $33,469$ measured genes. We can look at a histogram of the p values:
+
+```{r}
+ggplot(awde, aes(x = pvalue)) +
+  geom_histogram(binwidth = 0.025, boundary = 0)
+```
+
+Let's say we reject the null hypothesis for all p values less than $\alpha$. We can see how many null hypotheses we reject:
+
+```{r}
+alpha <- 0.025
+
+# Recall that TRUE and FALSE are stored as 0 and 1, so we can sum to get a count
+sum(awde$pvalue <= alpha)
+```
+
+And we can estimate $V$, how many false positives we have:
+
+```{r}
+alpha * nrow(awde)
+```
+
+We can then estimate the fraction of false rejections as:
+
+```{r}
+(alpha * nrow(awde))/sum(awde$pvalue <= alpha)
+```
+
+Formally, the **false discovery rate** (FDR) is defined as: $$
+FDR = E\left[\frac{V}{max(R,1)}\right]
+$$ Which is the average proportion of rejections that are false rejections.
+
+## The Benjamini-Hochberg algorithm for controlling the FDR
+
+The Benjamini-Hochberg algorithm controls for a chosen FDR threshold via the following steps:
+
+-   First, order the p values in increasing order, $p_{(1)}...p_{(m)}$
+-   Then for some choice of the target FDR, $\varphi$, find the largest value of $k$ that satisfies $p_{(k)} < \varphi k/m$
+-   Reject hypotheses $1$ through $k$
+
+We can see how this procedure works when applied to our RNA-Seq p value distribution:
+
+```{r}
+phi  = 0.10
+awde = mutate(awde, rank = rank(pvalue))
+m    = nrow(awde)
+
+ggplot(dplyr::filter(awde, rank <= 7000), aes(x = rank, y = pvalue)) +
+  geom_line() + geom_abline(slope = phi / m, col = "red")
+```
+
+We find the rightmost point where our p-values and the expected null false discoveries intersect, then reject all tests to the left.
+
+## Multiple Hypothesis Correction in R
+
+We can use Bonferroni correction or the Benjamini-Hochberg algorithm using the function `p.adjust`.
+
+```{r}
+#| eval: false
+p.adjust(awde$pvalue, method="bonferroni")
+p.adjust(awde$pvalue, method="BH")
+```
+
