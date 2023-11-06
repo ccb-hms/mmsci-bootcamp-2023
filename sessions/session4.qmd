@@ -62,7 +62,7 @@ Data submitted to GEO contain sample labels assigned by the experimenters, and s
 
 **For your own data, you will have to decide which columns will be useful in the analysis**. This will include the column giving the main comparison(s) of interest and any potential confounding factors. In this particular dataset it looks like `source_name_ch1` and `characteristics_ch1.1`.
 
-We can use the `select` function from `dplyr` to display just these columns of interest. At this stage it will also be useful to rename the columns to something more convenient using the `rename` function.
+We can use the `select` function to display just these columns of interest. At this stage it will also be useful to rename the columns to something more convenient using the `rename` function.
 
 ```{r}
 library(dplyr)
@@ -159,7 +159,7 @@ design
 colnames(design) <- c("Normal","Tumour")
 ```
 
-It has been demonstrated that our power to detect differential expression can be improved if we filter lowly-expressed genes prior to performing the analysis. Quite how one defines a gene being expressed may vary from experiment to experiment, so a cut-off that will work for all datasets is not feasible. Here we consider that aroudn 50% of our genes will not be expressed, and use the median expression level as a cut-off.
+It has been demonstrated that our power to detect differential expression can be improved if we filter lowly-expressed genes prior to performing the analysis. Quite how one defines a gene being expressed may vary from experiment to experiment, so a cut-off that will work for all datasets is not feasible. Here we consider that around 50% of our genes will not be expressed, and use the median expression level as a cut-off.
 
 ```{r eval=FALSE}
 summary(exprs(gse))
@@ -180,7 +180,6 @@ table(keep)
 ## subset to just those expressed genes
 gse <- gse[keep,]
 ```
-
 
 
 The `lmFit` function is used to fit the model to the data. The result of which is to estimate the expression level in each of the groups that we specified.
